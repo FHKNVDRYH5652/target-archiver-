@@ -374,9 +374,9 @@
     
     // Target and Price Amounts 
     const PLANS = [
-      { name: "Low Risk", low: 200, high: 1000, price: 100, type: "standard" },
+      { name: "High Risk", low: 200, high: 1000, price: 100, type: "standard" },
       { name: "Medium Risk", low: 500, high: 2500, price: 350, type: "standard" },
-      { name: "High Risk", low: 1000, high: 5000, price: 750, type: "standard" },
+      { name: "Low Risk", low: 1000, high: 5000, price: 750, type: "standard" },
       { name: "VIP 1", low: 500, high: 25000, price: 3500, type: "premium" },
       { name: "VIP 2", low: 1000, high: 30000, price: 5000, type: "premium" },
     ];
@@ -545,7 +545,7 @@
           pred = "Red";
         }
         if (lastDigit === 5 || lastDigit === 0) {
-            pred = pred + " + Violet";
+            pred = pred + 
         }
       } else { // Even levels: Big/Small mode (L2)
         mode = 'BS';
