@@ -398,6 +398,7 @@
       initialCycleBalance: 0, // Balance at the start of the 3-level cycle
       level: 1, // Current bet level (1, 2, or 3)
       currentMode: 'COLOR', // NEW: Tracks the current prediction type ('COLOR' or 'BS'). Starts with COLOR.
+      skipActive: false, // NEW: Tracks if the next click should be a skip
       pending: null,
       utrListener: null,
       adminListener: null,
@@ -515,24 +516,44 @@
       $("history").prepend(row);
     }
 
-    // --- Prediction Logic (Updated to be Random and use currentMode) ---
+    // --- Prediction Logic (Updated to include SKIP step) ---
 
     function makePrediction() {
       const periodInput = $("period");
       const period = periodInput.value.trim();
       const level = state.level;
       
-      // Calculate bet based on fixed 3-level percentage of the initial cycle balance
-      const betAmounts = calculateBetAmounts(state.initialCycleBalance);
-      const bet = betAmounts[level];
-      
       if (period.length !== 3 || isNaN(period)) {
         alert("Please enter the last 3 digits of the period.");
         return;
       }
       
-      if (level > 3 || state.balance <= 0 || bet <= 0) {
+      if (level > 3 || state.balance <= 0) {
         alert("Maximum loss reached or balance is zero. Please end the session.");
+        return;
+      }
+      
+      // --- NEW SKIP LOGIC START ---
+      if (state.skipActive) {
+          // This is the first click after a loss. Show "SKIP".
+          $("prediction-pill").textContent = "SKIP THIS PERIOD";
+          $("status").textContent = "Wait for the next period, then generate prediction again.";
+          $("step-box").textContent = "Step: 2 — **SKIP** period. Next click will generate the prediction.";
+          
+          state.skipActive = false; // Skip done, ready for the real prediction next time
+          state.pending = null; // No result to record for a skip
+          $("result-input").classList.add("hidden"); // Hide result buttons
+          periodInput.value = '';
+          return; // Exit the function, prediction not generated yet
+      }
+      // --- NEW SKIP LOGIC END ---
+      
+      // Calculate bet based on fixed 3-level percentage of the initial cycle balance
+      const betAmounts = calculateBetAmounts(state.initialCycleBalance);
+      const bet = betAmounts[level];
+      
+      if (bet <= 0) {
+        alert("Calculated bet amount is zero. Please end the session.");
         return;
       }
 
@@ -554,7 +575,7 @@
       // Update UI with prediction
       $("prediction-pill").textContent = pred;
       $("status").textContent = `Bet ₹${bet} on ${pred}. (Level ${state.level})`;
-      $("step-box").textContent = "Step: 1 — Prediction generated (" + (mode === 'BS' ? 'Big/Small' : 'Color') + ")";
+      $("step-box").textContent = "Step: 3 — Prediction generated (" + (mode === 'BS' ? 'Big/Small' : 'Color') + ")";
       
       state.pending = { period, pred, bet, ts: Date.now(), mode: mode }; // Store the determined mode
       
@@ -562,7 +583,7 @@
       $("result-input").classList.remove("hidden");
     }
 
-    // --- Result Recording Logic (Updated Mode Switching) ---
+    // --- Result Recording Logic (Updated Mode Switching & Skip Activation) ---
 
     function recordResult(win) {
       if (!state.pending) return;
@@ -575,6 +596,7 @@
         state.balance += r.bet;
         state.level = 1; // Reset level on win
         state.initialCycleBalance = state.balance; // Start new 3-level cycle with new balance
+        state.skipActive = false; // NEW: Ensure skip is OFF on win
         
         // **RULE: MODE STAYS THE SAME ON WIN**
         // state.currentMode is already modeUsed, so no change needed.
@@ -588,8 +610,9 @@
         
         // **RULE: MODE SWITCHES ON LOSS**
         state.currentMode = (modeUsed === 'BS') ? 'COLOR' : 'BS'; // Toggle mode
+        state.skipActive = true; // NEW: Activate skip for the next prediction attempt
         
-        $("status").textContent = "Loss recorded. Generate next prediction.";
+        $("status").textContent = "Loss recorded. Generate next prediction (Skipped).";
         appendHistory({ time: new Date().toLocaleTimeString(), period: r.period, bet: r.bet, pred: r.pred, win: false });
 
         // Termination check is crucial here
@@ -604,7 +627,7 @@
             return;
         }
 
-        $("step-box").textContent = "Step: Loss — Mode switched to " + state.currentMode + ". Generate again.";
+        $("step-box").textContent = "Step: Loss — Mode switched to " + state.currentMode + ". **SKIP** activated for next period.";
       }
 
       updateStats();
@@ -710,6 +733,7 @@
             state.level = 1;
             state.pending = null;
             state.currentMode = 'COLOR'; // Reset mode on new session start
+            state.skipActive = false; // NEW: Reset skip status on new session start
             
             updateStats();
             
@@ -881,4 +905,3 @@
   </script>
 </body>
 </html>
-
