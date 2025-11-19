@@ -433,12 +433,10 @@
       balance: 0,
       initialCycleBalance: 0, 
       level: 1,
-      // Updated Modes: 
-      // 0: COLOR (Red/Green - Random)
-      // 1: BS_NUMBER (Big/Small - Based on 5 number count)
-      // 2: BS_RANDOM (Big/Small - Random)
-      currentModeIndex: 0, 
-      currentModeName: 'COLOR',
+      // 0: COLOR, 1: BS_NUMBER, 2: BS_RANDOM. 
+      // Starting mode is BS_RANDOM (Index 2) as per requirement.
+      currentModeIndex: 2, 
+      currentModeName: 'BS_RANDOM', 
       pending: null,
       utrListener: null,
       adminListener: null,
@@ -549,7 +547,7 @@
       $("history").prepend(row);
     }
 
-    // --- NEW PATTERN SWITCHING PREDICTION LOGIC (Internal Text Removed) ---
+    // --- NEW PATTERN SWITCHING PREDICTION LOGIC ---
 
     function makePrediction() {
       const periodInput = $("period");
@@ -582,16 +580,15 @@
       state.currentModeName = MODE_NAMES[state.currentModeIndex];
 
       if (state.currentModeName === 'COLOR') {
-        // Step 1: COLOR (Red/Green - Random)
+        // Mode 0: COLOR (Red/Green - Random) - Used at 1st Loss (Level 2)
         const colors = ["Red", "Green"];
         pred = colors[Math.floor(Math.random() * colors.length)];
-        // stepText = "Step 1: Color (Random)"; // REMOVED
 
       } else if (state.currentModeName === 'BS_NUMBER') {
-        // Step 2: BS - Number Count (Big/Small based on 5 random numbers)
+        // Mode 1: BS - Number Count (Big/Small based on 5 random numbers) - Used at 2nd Loss (Level 3)
         let bigCount = 0;
         let smallCount = 0;
-        let numbers = [];
+        let numbers = []; // Internal only, per user request (Hidden)
         
         for (let i = 0; i < 5; i++) {
             const num = Math.floor(Math.random() * 10); // 0-9
@@ -608,19 +605,14 @@
         } else if (smallCount > bigCount) {
             pred = "Small";
         } else {
+            // Tie breaker (50/50)
             pred = Math.random() < 0.5 ? "Big" : "Small"; 
         }
 
-        // Show the numbers but not the mode logic
-        numLog.innerHTML = `**Numbers:** ${numbers.join(', ')} (${bigCount} Big / ${smallCount} Small)`;
-        numLog.style.display = 'block';
-        // stepText = "Step 2: Big/Small (5 Number Count)"; // REMOVED
-
       } else { // state.currentModeName === 'BS_RANDOM'
-        // Step 3: BS - Random (Big/Small - Random)
+        // Mode 2: BS - Random (Big/Small - Random) - Used at Initial/Win (Level 1) & 3rd Loss (Level 4)
         const bs = ["Big", "Small"];
         pred = bs[Math.floor(Math.random() * bs.length)];
-        // stepText = "Step 3: Big/Small (Random)"; // REMOVED
       }
 
       // Update UI with prediction
@@ -634,7 +626,7 @@
       $("result-input").classList.remove("hidden");
     }
 
-    // --- Result Recording Logic (Internal Text Removed) ---
+    // --- Result Recording Logic ---
 
     function recordResult(win) {
       if (!state.pending) return;
@@ -655,21 +647,31 @@
         
         $("status").textContent = "Win recorded. Generate next prediction.";
         appendHistory({ time: new Date().toLocaleTimeString(), period: r.period, bet: r.bet, pred: r.pred, win: true });
-        // $("step-box").textContent = "Step: WIN — Mode stays: " + modeUsed + ". Level reset to 1."; // REMOVED
         $("step-box").textContent = '';
 
       } else {
         state.balance -= r.bet; // Deduct loss
         state.level += 1; // Increase level on loss
         
-        // **RULE: MODE SWITCHES ON LOSS**
-        state.currentModeIndex = (state.currentModeIndex + 1) % MODE_NAMES.length; // 0 -> 1 -> 2 -> 0
+        // **RULE: MODE SWITCHES ON LOSS - Cycle: 2 (BS_RANDOM) -> 0 (COLOR) -> 1 (BS_NUMBER) -> 2 (BS_RANDOM)**
+        if (state.currentModeIndex === 2) { 
+             // Current: BS_RANDOM (L1) -> Next: COLOR (L2)
+             state.currentModeIndex = 0; 
+        } else if (state.currentModeIndex === 0) { 
+             // Current: COLOR (L2) -> Next: BS_NUMBER (L3)
+             state.currentModeIndex = 1; 
+        } else if (state.currentModeIndex === 1) { 
+             // Current: BS_NUMBER (L3) -> Next: BS_RANDOM (L4 - Final Cycle)
+             // **FIXED: This completes the cycle back to the starting mode (2)**
+             state.currentModeIndex = 2; 
+        }
+        
         state.currentModeName = MODE_NAMES[state.currentModeIndex];
         
         $("status").textContent = "Loss recorded. Prepare for next bet.";
         appendHistory({ time: new Date().toLocaleTimeString(), period: r.period, bet: r.bet, pred: r.pred, win: false });
 
-        // Termination check is crucial here
+        // Termination check (ends after 3rd loss, which is Level 4)
         if (state.level > 3 || state.balance <= 0) {
             state.balance = 0; 
             $("status").textContent = "🔴 Max Loss Reached / Balance Zero. Session Over.";
@@ -681,7 +683,6 @@
             return;
         }
 
-        // $("step-box").textContent = "Step: LOSS — Mode switched to " + state.currentModeName + ". Generate again."; // REMOVED
         $("step-box").textContent = '';
       }
 
@@ -787,7 +788,7 @@
             state.targetHigh = data.targetHigh || state.targetHigh;
             state.level = 1;
             state.pending = null;
-            state.currentModeIndex = 0; // Start at COLOR mode
+            state.currentModeIndex = 2; // Start at BS_RANDOM (Index 2)
             
             updateStats();
             
