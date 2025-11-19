@@ -5,193 +5,229 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Prediction Portal — Platforms & Plans</title>
 <style>
-  /* Revamped Colors for Luxury/Vibrant Feel (Home/Payment Pages) */
+  /* NEW COLOR SCHEME: RED/BLACK for main pages, CYAN/BLUE for Prediction Tool */
   :root{
-    --bg:#070d18; /* Deep Black-Blue */
-    --card:#1a2337; /* Lighter Card for contrast */
-    --muted:#a0aec0; /* Lighter muted text */
+    /* Global Theme (Platforms/Plans/Payment) - Red/Black from previous step */
+    --bg:#000000; /* Pure Black Background */
+    --card:#1a0303; /* Very dark red/black for card backgrounds */
+    --muted:#8b0000; /* Darker red for muted text/lines */
     --text:#f8f9fa; /* Bright white text */
-    --accent:#ff5722; /* Vibrant Orange/Red accent (Main Theme) */
-    --accent-2:#ff9800; /* Amber for gradient */
+    --accent:#ff0000; /* Vibrant Red for main accent */
+    --accent-2:#ff3333; /* Slightly lighter red for gradients */
     
-    /* Prediction Page Professional Theme */
-    --pred-bg: #0c142b; /* Deep Professional Blue */
-    --pred-card-bg: #152345; /* Darker Card for Contrast */
-    --pred-accent: #00eaff; /* Electric Cyan/Teal for energy */
+    /* Prediction Page Theme (NEW: Cyber Blue/Cyan for attractive look) */
+    --pred-bg: #030a1c; /* Deep Midnight Blue */
+    --pred-card-bg: #101c3d; /* Darker card with blue hint */
+    --pred-accent: #00eaff; /* Electric Cyan glow */
+    --pred-text: #e0f8ff; /* Light blue/white text */
     
     /* Vivid Clean Colors */
-    --clear-good: #10ac60; /* Darker, cleaner Green for WIN */
-    --clear-bad: #e74c3c; /* Darker, cleaner Red for LOSS/Danger */
+    --clear-good: #10ac60; /* Cleaner Green for WIN */
+    --clear-bad: #ff3333; /* Use red for LOSS/Danger */
     
-    --warning:#ffeb3b;
-    --alert-red: #ff3333; 
+    --warning:#ffeb3b; /* Yellow warning */
+    --alert-red: #ff3333; /* Specific red for alerts */
+    
+    /* NEW: Button Color for action */
+    --action-button: #39ff14; /* Neon Green for Generate Prediction */
   }
   *{box-sizing:border-box}
-  /* Radial gradient for the main theme */
-  html,body{margin:0;padding:0;background:radial-gradient(1200px 600px at 50% -20%, rgba(255, 87, 34, .3), transparent), var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif}
+  /* Radial gradient for the main theme (Red Glow) */
+  html,body{margin:0;padding:0;background:radial-gradient(1200px 600px at 50% -20%, rgba(255, 0, 0, .2), transparent), var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif}
   .container{max-width:980px;margin:0 auto;padding:16px}
   h1,h2,h3{margin:0 0 10px}
   .subtitle{color:var(--muted);font-size:.95rem;margin-bottom:18px}
   .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   @media (min-width:720px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
   
-  /* IMPROVED GENERAL CARD DESIGN (Home/Payment/Plans) */
+  /* IMPROVED GENERAL CARD DESIGN */
   .card{
-    background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
-    border:1px solid rgba(255,255,255,.15);
-    border-radius:20px;
+    background:var(--card);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:16px; 
     padding:18px;
-    box-shadow:0 10px 30px rgba(0,0,0,.4);
+    box-shadow:0 8px 24px rgba(0,0,0,.6);
     transition: box-shadow 0.3s ease;
   }
   .card:hover{
-    box-shadow:0 15px 40px rgba(0,0,0,.6);
+    box-shadow:0 12px 30px rgba(0,0,0,.8);
   }
 
-  /* METALLIC STYLES (Maintained for Luxury Feel) */
-  .card.luxury-gold {
-      border-color: #ffc107;
-      background: radial-gradient(circle at 50% 10%, #301f05 0%, #000000 70%);
-  }
+  /* METALLIC STYLES */
+  .card.luxury-gold { border-color: #ffd700; background: linear-gradient(135deg, #4d3b00 0%, #292000 100%); }
   .card.luxury-gold h3, .card.luxury-gold .price { color: #ffd700; text-shadow: 0 0 3px #ff4500; }
-  .card.refined-bronze {
-      border-color: #8c7853;
-      background: linear-gradient(135deg, #4b3724 0%, #6f5945 100%);
-      color: #f0e6da;
-  }
-  .card.electric-silver {
-      border-color: #b0c4de;
-      background: linear-gradient(135deg, #36454f 0%, #5b6f7f 100%);
-      color: #e0f2f1;
-  }
+  .card.refined-bronze { border-color: #8c7853; background: linear-gradient(135deg, #644a33 0%, #3e2d20 100%); color: #f0e6da; }
+  .card.electric-silver { border-color: #b0c4de; background: linear-gradient(135deg, #4d5d6a 0%, #2d3840 100%); color: #e0f2f1; }
   /* END METALLIC STYLES */
 
-  /* General Button Improvement (Orange Gradient) */
+  /* General Button Improvement (Red Gradient for main pages) */
   .btn{
-    display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:12px;padding:12px 14px;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:10px;padding:12px 14px;
     background:linear-gradient(90deg,var(--accent),var(--accent-2));
     color:#fff;
-    font-weight:650;cursor:pointer;transition:transform .06s ease, opacity .2s ease;text-decoration:none;
-    box-shadow: 0 4px 10px rgba(255, 87, 34, 0.4); 
+    font-weight:700;cursor:pointer;transition:transform .06s ease, opacity .2s ease;text-decoration:none;
+    box-shadow: 0 4px 10px rgba(255, 0, 0, 0.6);
   }
   .btn:active{transform:translateY(1px) scale(.99)}
   .btn.muted{
-    background:#37474f;
+    background:#37474f; 
     color:var(--text);
     box-shadow: none;
   }
   .btn.full{width:100%}
   .header{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:14px}
-  .tag{font-size:.78rem;padding:6px 10px;border-radius:999px;background:#202a4f;border:1px solid rgba(255,255,255,.06);color:#c9d1ff}
-  .price{font-size:1rem;color:#cde4ff;margin-top:8px}
+  .tag{font-size:.78rem;padding:6px 10px;border-radius:999px;background:#300000;border:1px solid rgba(255,255,255,.06);color:#ffaaaa}
+  .price{font-size:1rem;color:#ffcccc;margin-top:8px}
   .tiny{font-size:.8rem;color:var(--muted)}
-  .section-title{margin:18px 0 10px;font-size:1rem;color:#bcd2ff;letter-spacing:.3px;text-transform:uppercase}
+  .section-title{margin:18px 0 10px;font-size:1rem;color:#ff5555;letter-spacing:.3px;text-transform:uppercase}
   .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  input, select{background:#0f1633;border:1px solid #243055;color:#dfe7ff;border-radius:10px;padding:12px 12px;font-size:1rem;outline:none;width:100%}
-  input:focus{border-color:#ff5722;box-shadow:0 0 0 3px rgba(255, 87, 34, 0.4)}
+  input, select{background:#1a0303;border:1px solid #4d0000;color:#dfe7ff;border-radius:10px;padding:12px 12px;font-size:1rem;outline:none;width:100%}
+  input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255, 0, 0, 0.4)}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .hidden{display:none !important}
   .center{text-align:center}
   .qr{width:220px;height:auto;border-radius:14px;box-shadow:0 12px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06)}
   
   /* ==================================== */
-  /* Prediction Page Professional Styles (Teal/Cyan Theme) */
+  /* Prediction Page Styles (CYAN/BLUE Theme - GLOW REDUCED) */
   /* ==================================== */
   #view-prediction {
-      /* Overrides background for Prediction page to be the new professional dark blue */
-      background: radial-gradient(1200px 600px at 50% -20%, rgba(0, 234, 255, .1), transparent), var(--pred-bg) !important;
+      /* Reduced glow effect */
+      background: radial-gradient(800px 400px at 50% -20%, rgba(0, 234, 255, .1), transparent), var(--pred-bg) !important;
+      color: var(--pred-text); /* Use light blue/white text */
   }
+  
+  /* Make the title big and cyan */
+  #view-prediction h1 {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: var(--pred-accent); 
+      text-shadow: 0 0 3px rgba(0, 234, 255, 0.3); /* Reduced glow */
+  }
+  
+  #view-prediction .subtitle {
+      color: #70b8c6; /* Lighter muted blue */
+  }
+
+  /* Card and Stat Boxes */
   #view-prediction .card {
-      /* Card style inside prediction page - clean and professional */
-      border: 1px solid rgba(0, 234, 255, 0.2);
-      box-shadow: 0 10px 30px rgba(0,0,0,.6);
+      border: 1px solid rgba(0, 234, 255, 0.1); /* Reduced border visibility */
+      box-shadow: 0 5px 15px rgba(0,0,0,.6); /* Reduced shadow/glow */
       background: var(--pred-card-bg); 
-      border-radius: 14px; /* Slightly smaller radius for sharper look */
+      border-radius: 14px; 
   }
   #view-prediction .stat {
-      border: 1px solid rgba(0, 234, 255, 0.2);
-      background: #1b2641;
+      border: 1px solid rgba(0, 234, 255, 0.1);
+      background: #0f244a; /* Darker blue background for stats */
       padding: 12px;
       border-radius: 10px;
   }
-  #view-prediction .stat .label { color: var(--muted); }
+  #view-prediction .stat .label { color: #88a7cc; } /* Attractive color for label */
   #view-prediction .stat .value {
       color: var(--pred-accent);
       font-weight: 800;
       font-size: 1.2rem;
   }
 
-  /* Prediction Pill (The main result box) */
-  #prediction-pill {
-      font-weight: 700;
-      background: var(--pred-accent);
-      color: var(--pred-bg); /* Dark text on light accent for readability */
-      padding: 12px 24px;
-      border-radius: 999px;
-      box-shadow: 0 4px 10px rgba(0, 234, 255, 0.6); 
-      font-size: 1.4rem !important; /* Bigger for prominence */
-      text-transform: uppercase;
+  /* Input fields (Period) */
+  #view-prediction input {
+      background: #0f244a;
+      border: 1px solid rgba(0, 234, 255, 0.3);
+      color: var(--pred-text);
+  }
+  #view-prediction input:focus {
+      border-color: var(--pred-accent);
+      box-shadow: 0 0 0 2px rgba(0, 234, 255, 0.2); /* Reduced focus glow */
   }
 
-  /* Win/Loss Button Colors (Vivid and Clean - Increased Size/Prominence) */
+  /* Generate Prediction Button (Attractive Neon Green) */
+  #view-prediction button.btn:not(.muted):not(.good):not(.bad) {
+      background: var(--action-button);
+      color: #000; /* Black text for high contrast */
+      font-weight: 900;
+      box-shadow: 0 0 5px rgba(57, 255, 20, 0.5); /* Reduced glow */
+  }
+  
+  /* Prediction Pill (The main result box) - Electric Cyan */
+  #prediction-pill {
+      font-weight: 800;
+      background: linear-gradient(45deg, var(--pred-accent), #00a4b3);
+      color: var(--pred-card-bg); /* Dark blue text on bright cyan */
+      padding: 14px 28px;
+      border-radius: 999px;
+      box-shadow: 0 3px 10px rgba(0, 234, 255, 0.4); /* Reduced glow */
+      font-size: 1.6rem !important; 
+      text-transform: uppercase;
+  }
+  
+  /* Log box for number prediction */
+  #number-prediction-log {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: var(--warning);
+      padding: 8px;
+      background: #101c3d; /* Dark blue background for log */
+      border: 1px solid #0f244a;
+      border-radius: 8px;
+      display: none; 
+  }
+
+  /* Win/Loss Button Colors (Vivid and Clean - Use Red/Green, but styled for the theme) */
   #result-input .btn {
-      padding: 18px 12px; /* Increased padding/height */
-      font-size: 1.2rem; /* Larger font */
-      font-weight: 800; /* Bolder */
+      padding: 18px 12px;
+      font-size: 1.2rem;
+      font-weight: 800;
       border-radius: 10px;
-      color: #000; /* Text color set to Black */
+      color: #000;
   }
   #result-input .good {
-      background: var(--clear-good);
+      background: var(--clear-good); 
       box-shadow: 0 4px 10px rgba(16, 172, 96, 0.5); 
   }
   #result-input .bad {
-      background: var(--clear-bad);
-      box-shadow: 0 4px 10px rgba(231, 76, 60, 0.5); 
+      background: var(--clear-bad); 
+      box-shadow: 0 4px 10px rgba(255, 0, 0, 0.5); 
   }
   
   /* Staking Plan display */
   .staking-plan {
       margin-top: 20px;
       padding-top: 15px;
-      border-top: 1px solid rgba(0, 234, 255, 0.1);
+      border-top: 1px solid rgba(0, 234, 255, 0.1); /* Cyan border */
+  }
+  #view-prediction .section-title {
+      color: var(--pred-accent);
   }
   .staking-plan .item {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      font-size: 1rem;
-      color: var(--muted);
-      border-bottom: 1px dashed rgba(255,255,255,.05);
-  }
-  .staking-plan .item:last-child {
-       border-bottom: none;
-  }
-  .staking-plan .item span:nth-child(2) {
-      font-weight: 600;
+      color: #88a7cc; /* Attractive muted color */
+      border-bottom: 1px dashed rgba(0, 234, 255, 0.08);
   }
   .staking-plan .item.current {
-      font-weight: bold;
       color: var(--pred-accent);
-      background: rgba(0, 234, 255, 0.1);
-      padding: 8px 10px;
-      margin: 4px -10px;
-      border-radius: 8px;
+      background: rgba(0, 234, 255, 0.1); /* Cyan highlight */
   }
-  .staking-plan .item.current span:nth-child(2) {
-      font-size: 1.1rem;
+  
+  /* History Log */
+  #view-prediction .log {
+      background: var(--pred-card-bg);
+      border: 1px solid rgba(0, 234, 255, 0.2);
+  }
+  #view-prediction .pill {
+      border:1px solid #0f244a; 
+      background: #101c3d;
+      color:var(--pred-accent)
   }
   /* ==================================== */
   /* END Prediction Page Styles */
   /* ==================================== */
 
 
-  .pill{padding:6px 10px;border-radius:999px;font-size:.85rem;border:1px solid #2f3a6b;background:#111941}
+  .pill{padding:6px 10px;border-radius:999px;font-size:.85rem;border:1px solid #4d0000;background:#300000;color:#ffaaaa} /* Red pill for non-prediction pages */
   .good{color:var(--clear-good)}
   .bad{color:var(--clear-bad)}
-  .log{background:#0d1430;border:1px solid #22305f;border-radius:14px;max-height:220px;overflow:auto;padding:10px}
+  .log{background:#1a0303;border:1px solid #4d0000;border-radius:14px;max-height:220px;overflow:auto;padding:10px}
   .log .item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
-  footer{margin-top:40px;color:#7f8ccf;text-align:center;font-size:.8rem}
+  footer{margin-top:40px;color:#ffaaaa;text-align:center;font-size:.8rem}
 
   /* Admin Panel Button Style (Hidden in right corner) */
   #admin-button {
@@ -331,12 +367,16 @@
         </div>
         <div class="center" style="margin-top:12px">
           <div class="pill" id="prediction-pill">—</div>
-          <div class="tiny" id="step-box" style="margin-top:8px">Step: —</div>
-          <div id="status" style="margin-top:10px; font-weight:bold; color:var(--text)">Waiting for period...</div>
+          
+          <div id="number-prediction-log" style="display:none;"></div>
+
+          <div class="tiny" id="step-box" style="margin-top:8px; display:none;">Step: —</div>
+          
+          <div id="status" style="margin-top:10px; font-weight:bold; color:var(--pred-text)">Waiting for period...</div>
         </div>
         
         <div class="staking-plan">
-            <div class="section-title" style="margin:5px 0 10px; font-size:0.9rem; color:#fff">Staking Plan (Current Balance Risk)</div>
+            <div class="section-title" style="margin:5px 0 10px; font-size:0.9rem; color:var(--pred-accent)">Staking Plan (Current Balance Risk)</div>
             <div id="staking-levels">
                 </div>
         </div>
@@ -370,12 +410,9 @@
     const $ = (id) => document.getElementById(id);
 
     // Initial State and Constants
-    // *******************************************************************
-    // PLATFORM NAMES UPDATED:
     const PLATFORMS = ["TASHAN WIN", "JALWA GAME", "DM WIN"]; 
-    // *******************************************************************
     
-    // Target and Price Amounts 
+    // Updated Plans (Original values kept for functionality)
     const PLANS = [
       { name: "HIGH RISK", low: 200, high: 1000, price: 150, type: "standard" },
       { name: "Medium RISK", low: 500, high: 3000, price: 500, type: "standard" },
@@ -384,7 +421,6 @@
       { name: "VIP 2", low: 1000, high: 30000, price: 5000, type: "premium" },
     ];
     
-    // Fixed 3-Level Staking Percentages: 15%, 30%, 55% (Total 100%)
     const STAKE_PERCENTAGES = [0, 0.15, 0.30, 0.55]; 
     const ADMIN_PASSWORD = "456";
 
@@ -395,14 +431,21 @@
       targetLow: 0,
       targetHigh: 0,
       balance: 0,
-      initialCycleBalance: 0, // Balance at the start of the 3-level cycle
-      level: 1, // Current bet level (1, 2, or 3)
-      currentMode: 'COLOR', // NEW: Tracks the current prediction type ('COLOR' or 'BS'). Starts with COLOR.
-      skipActive: false, // NEW: Tracks if the next click should be a skip
+      initialCycleBalance: 0, 
+      level: 1,
+      // Updated Modes: 
+      // 0: COLOR (Red/Green - Random)
+      // 1: BS_NUMBER (Big/Small - Based on 5 number count)
+      // 2: BS_RANDOM (Big/Small - Random)
+      currentModeIndex: 0, 
+      currentModeName: 'COLOR',
       pending: null,
       utrListener: null,
       adminListener: null,
     };
+    
+    // Map index to Mode Name
+    const MODE_NAMES = ['COLOR', 'BS_NUMBER', 'BS_RANDOM'];
 
     // Firebase Setup (From User Input - Replicated from previous steps)
     const firebaseConfig = {
@@ -444,27 +487,23 @@
       show(viewId);
     }
     
-    // Calculates the 3 fixed bet amounts based on current 'initialCycleBalance'
     function calculateBetAmounts(baseBalance) {
-      const L1_PERCENT = STAKE_PERCENTAGES[1]; // 15%
-      const L2_PERCENT = STAKE_PERCENTAGES[2]; // 30%
+      const L1_PERCENT = STAKE_PERCENTAGES[1];
+      const L2_PERCENT = STAKE_PERCENTAGES[2];
       
       const bet1 = Math.round(baseBalance * L1_PERCENT);
       const bet2 = Math.round(baseBalance * L2_PERCENT);
       
-      // L3 takes the remaining balance to ensure total is 100% of baseBalance
       const bet3 = baseBalance - bet1 - bet2; 
       
-      return [0, bet1, bet2, bet3]; // L1 at Index 1, L2 at 2, L3 at 3
+      return [0, bet1, bet2, bet3];
     }
     
-    // Renders the 3 fixed levels of the staking plan
     function renderBettingLevels() {
         const container = $("staking-levels");
         container.innerHTML = '';
         
         const currentLevel = state.level;
-        // Calculate based on the balance at the START of the 3-level cycle
         const betAmounts = calculateBetAmounts(state.initialCycleBalance); 
         
         if (currentLevel > 3 || state.initialCycleBalance <= 0) {
@@ -476,7 +515,6 @@
             const betAmount = betAmounts[level];
             
             const item = document.createElement("div");
-            // Highlight the current level
             item.className = "item" + (level === currentLevel ? " current" : ""); 
             
             item.innerHTML = `
@@ -489,18 +527,14 @@
     }
 
 
-    // Update the UI stats
     function updateStats() {
       $("balance").textContent = `₹${state.balance}`;
       $("target-range").textContent = `₹${state.targetLow} - ₹${state.targetHigh}`;
       
-      // Update the 3-level staking display
       renderBettingLevels();
       
-      // Update platform pill
       $("platform-pill").textContent = state.platform + ' • ' + state.plan;
 
-      // Show/Hide result input
       if (state.pending) {
         $("result-input").classList.remove("hidden");
       } else {
@@ -508,7 +542,6 @@
       }
     }
 
-    // Append history log
     function appendHistory(item) {
       const row = document.createElement("div");
       row.className = "item";
@@ -516,12 +549,15 @@
       $("history").prepend(row);
     }
 
-    // --- Prediction Logic (Updated to include SKIP step) ---
+    // --- NEW PATTERN SWITCHING PREDICTION LOGIC (Internal Text Removed) ---
 
     function makePrediction() {
       const periodInput = $("period");
       const period = periodInput.value.trim();
       const level = state.level;
+      const numLog = $("number-prediction-log");
+      numLog.style.display = 'none'; // Hide log initially
+      numLog.innerHTML = '';
       
       if (period.length !== 3 || isNaN(period)) {
         alert("Please enter the last 3 digits of the period.");
@@ -533,22 +569,6 @@
         return;
       }
       
-      // --- NEW SKIP LOGIC START ---
-      if (state.skipActive) {
-          // This is the first click after a loss. Show "SKIP".
-          $("prediction-pill").textContent = "SKIP THIS PERIOD";
-          $("status").textContent = "Wait for the next period, then generate prediction again.";
-          $("step-box").textContent = "Step: 2 — **SKIP** period. Next click will generate the prediction.";
-          
-          state.skipActive = false; // Skip done, ready for the real prediction next time
-          state.pending = null; // No result to record for a skip
-          $("result-input").classList.add("hidden"); // Hide result buttons
-          periodInput.value = '';
-          return; // Exit the function, prediction not generated yet
-      }
-      // --- NEW SKIP LOGIC END ---
-      
-      // Calculate bet based on fixed 3-level percentage of the initial cycle balance
       const betAmounts = calculateBetAmounts(state.initialCycleBalance);
       const bet = betAmounts[level];
       
@@ -557,67 +577,101 @@
         return;
       }
 
-      // --- NEW RANDOM PREDICTION LOGIC ---
       let pred;
-      const mode = state.currentMode; // Use the mode set by the win/loss history
+      
+      state.currentModeName = MODE_NAMES[state.currentModeIndex];
 
-      if (mode === 'COLOR') {
-        // Randomly select Red or Green (Violet removed)
+      if (state.currentModeName === 'COLOR') {
+        // Step 1: COLOR (Red/Green - Random)
         const colors = ["Red", "Green"];
         pred = colors[Math.floor(Math.random() * colors.length)];
-      } else { // mode === 'BS' (Big/Small)
-        // Randomly select Big or Small
+        // stepText = "Step 1: Color (Random)"; // REMOVED
+
+      } else if (state.currentModeName === 'BS_NUMBER') {
+        // Step 2: BS - Number Count (Big/Small based on 5 random numbers)
+        let bigCount = 0;
+        let smallCount = 0;
+        let numbers = [];
+        
+        for (let i = 0; i < 5; i++) {
+            const num = Math.floor(Math.random() * 10); // 0-9
+            numbers.push(num);
+            if (num >= 5) { // Big: 5, 6, 7, 8, 9
+                bigCount++;
+            } else { // Small: 0, 1, 2, 3, 4
+                smallCount++;
+            }
+        }
+        
+        if (bigCount > smallCount) {
+            pred = "Big";
+        } else if (smallCount > bigCount) {
+            pred = "Small";
+        } else {
+            pred = Math.random() < 0.5 ? "Big" : "Small"; 
+        }
+
+        // Show the numbers but not the mode logic
+        numLog.innerHTML = `**Numbers:** ${numbers.join(', ')} (${bigCount} Big / ${smallCount} Small)`;
+        numLog.style.display = 'block';
+        // stepText = "Step 2: Big/Small (5 Number Count)"; // REMOVED
+
+      } else { // state.currentModeName === 'BS_RANDOM'
+        // Step 3: BS - Random (Big/Small - Random)
         const bs = ["Big", "Small"];
         pred = bs[Math.floor(Math.random() * bs.length)];
+        // stepText = "Step 3: Big/Small (Random)"; // REMOVED
       }
-      // --- END NEW RANDOM PREDICTION LOGIC ---
 
       // Update UI with prediction
       $("prediction-pill").textContent = pred;
       $("status").textContent = `Bet ₹${bet} on ${pred}. (Level ${state.level})`;
-      $("step-box").textContent = "Step: 3 — Prediction generated (" + (mode === 'BS' ? 'Big/Small' : 'Color') + ")";
+      $("step-box").textContent = ''; // CLEAR STEP BOX
       
-      state.pending = { period, pred, bet, ts: Date.now(), mode: mode }; // Store the determined mode
+      state.pending = { period, pred, bet, ts: Date.now(), mode: state.currentModeName }; 
       
       periodInput.value = '';
       $("result-input").classList.remove("hidden");
     }
 
-    // --- Result Recording Logic (Updated Mode Switching & Skip Activation) ---
+    // --- Result Recording Logic (Internal Text Removed) ---
 
     function recordResult(win) {
       if (!state.pending) return;
 
       const r = state.pending;
-      const modeUsed = r.mode; // Mode used for the *just completed* prediction
+      const modeUsed = r.mode;
       state.pending = null; 
+
+      $("number-prediction-log").style.display = 'none'; // Hide log after result
 
       if (win) {
         state.balance += r.bet;
         state.level = 1; // Reset level on win
         state.initialCycleBalance = state.balance; // Start new 3-level cycle with new balance
-        state.skipActive = false; // NEW: Ensure skip is OFF on win
         
         // **RULE: MODE STAYS THE SAME ON WIN**
-        // state.currentMode is already modeUsed, so no change needed.
+        // state.currentModeIndex remains unchanged
         
         $("status").textContent = "Win recorded. Generate next prediction.";
         appendHistory({ time: new Date().toLocaleTimeString(), period: r.period, bet: r.bet, pred: r.pred, win: true });
-        $("step-box").textContent = "Step: Win — Mode stays: " + state.currentMode + ". Level reset to 1.";
+        // $("step-box").textContent = "Step: WIN — Mode stays: " + modeUsed + ". Level reset to 1."; // REMOVED
+        $("step-box").textContent = '';
+
       } else {
         state.balance -= r.bet; // Deduct loss
         state.level += 1; // Increase level on loss
         
         // **RULE: MODE SWITCHES ON LOSS**
-        state.currentMode = (modeUsed === 'BS') ? 'COLOR' : 'BS'; // Toggle mode
-        state.skipActive = true; // NEW: Activate skip for the next prediction attempt
+        state.currentModeIndex = (state.currentModeIndex + 1) % MODE_NAMES.length; // 0 -> 1 -> 2 -> 0
+        state.currentModeName = MODE_NAMES[state.currentModeIndex];
         
-        $("status").textContent = "Loss recorded. Generate next prediction (Skipped).";
+        $("status").textContent = "Loss recorded. Prepare for next bet.";
         appendHistory({ time: new Date().toLocaleTimeString(), period: r.period, bet: r.bet, pred: r.pred, win: false });
 
         // Termination check is crucial here
         if (state.level > 3 || state.balance <= 0) {
-            state.balance = 0; // Ensure balance is precisely 0 after losing L3
+            state.balance = 0; 
             $("status").textContent = "🔴 Max Loss Reached / Balance Zero. Session Over.";
             updateStats();
             setTimeout(() => {
@@ -627,7 +681,8 @@
             return;
         }
 
-        $("step-box").textContent = "Step: Loss — Mode switched to " + state.currentMode + ". **SKIP** activated for next period.";
+        // $("step-box").textContent = "Step: LOSS — Mode switched to " + state.currentModeName + ". Generate again."; // REMOVED
+        $("step-box").textContent = '';
       }
 
       updateStats();
@@ -725,15 +780,14 @@
             $("utr-status").textContent = "Payment Approved! Starting session...";
             $("utr-status").style.color = "var(--clear-good)";
 
-            // Set initial balance and start cycle
+            // Session Start State Reset
             state.balance = data.targetLow || state.targetLow;
-            state.initialCycleBalance = state.balance; // IMPORTANT: Set base for 3-level staking
+            state.initialCycleBalance = state.balance;
             state.targetLow = data.targetLow || state.targetLow;
             state.targetHigh = data.targetHigh || state.targetHigh;
             state.level = 1;
             state.pending = null;
-            state.currentMode = 'COLOR'; // Reset mode on new session start
-            state.skipActive = false; // NEW: Reset skip status on new session start
+            state.currentModeIndex = 0; // Start at COLOR mode
             
             updateStats();
             
