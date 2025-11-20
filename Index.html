@@ -614,6 +614,27 @@
         const bs = ["Big", "Small"];
         pred = bs[Math.floor(Math.random() * bs.length)];
       }
+      
+      // --- START: RANDOM OPPOSITE PREDICTION LOGIC ---
+      // UPDATED: Probability is now 0.35 (35%)
+      const REVERSAL_PROBABILITY = 0.35; 
+
+      if (Math.random() < REVERSAL_PROBABILITY) {
+          const originalPred = pred;
+          if (pred === 'Red') {
+              pred = 'Green';
+          } else if (pred === 'Green') {
+              pred = 'Red';
+          } else if (pred === 'Big') {
+              pred = 'Small';
+          } else if (pred === 'Small') {
+              pred = 'Big';
+          }
+          // Note: This logic is hidden from the user, so no UI change here.
+          // console.log(`[Hidden Reversal] Original: ${originalPred} -> Reversed: ${pred}`);
+      }
+      // --- END: RANDOM OPPOSITE PREDICTION LOGIC ---
+
 
       // Update UI with prediction
       $("prediction-pill").textContent = pred;
@@ -692,7 +713,7 @@
       if (state.balance >= state.targetHigh) {
         $("status").textContent = "🎯 Target hit!";
         setTimeout(() => {
-          alert("Congratulations! Your Target completed.");
+          alert("Congratulations! Your Target completed in this session.");
           show("view-platforms");
         }, 800);
       } 
