@@ -1,983 +1,1568 @@
-<!DOCTYPE html>
+
+        <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Prediction Portal — Platforms & Plans</title>
-<style>
-  /* NEW COLOR SCHEME: RED/BLACK for main pages, CYAN/BLUE for Prediction Tool */
-  :root{
-    /* Global Theme (Platforms/Plans/Payment) - Red/Black from previous step */
-    --bg:#000000; /* Pure Black Background */
-    --card:#1a0303; /* Very dark red/black for card backgrounds */
-    --muted:#8b0000; /* Darker red for muted text/lines */
-    --text:#f8f9fa; /* Bright white text */
-    --accent:#ff0000; /* Vibrant Red for main accent */
-    --accent-2:#ff3333; /* Slightly lighter red for gradients */
-    
-    /* Prediction Page Theme (NEW: Cyber Blue/Cyan for attractive look) */
-    --pred-bg: #030a1c; /* Deep Midnight Blue */
-    --pred-card-bg: #101c3d; /* Darker card with blue hint */
-    --pred-accent: #00eaff; /* Electric Cyan glow */
-    --pred-text: #e0f8ff; /* Light blue/white text */
-    
-    /* Vivid Clean Colors */
-    --clear-good: #10ac60; /* Cleaner Green for WIN */
-    --clear-bad: #ff3333; /* Use red for LOSS/Danger */
-    
-    --warning:#ffeb3b; /* Yellow warning */
-    --alert-red: #ff3333; /* Specific red for alerts */
-    
-    /* NEW: Button Color for action */
-    --action-button: #39ff14; /* Neon Green for Generate Prediction */
-  }
-  *{box-sizing:border-box}
-  /* Radial gradient for the main theme (Red Glow) */
-  html,body{margin:0;padding:0;background:radial-gradient(1200px 600px at 50% -20%, rgba(255, 0, 0, .2), transparent), var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif}
-  .container{max-width:980px;margin:0 auto;padding:16px}
-  h1,h2,h3{margin:0 0 10px}
-  .subtitle{color:var(--muted);font-size:.95rem;margin-bottom:18px}
-  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-  @media (min-width:720px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-  
-  /* IMPROVED GENERAL CARD DESIGN */
-  .card{
-    background:var(--card);
-    border:1px solid rgba(255,255,255,.1);
-    border-radius:16px; 
-    padding:18px;
-    box-shadow:0 8px 24px rgba(0,0,0,.6);
-    transition: box-shadow 0.3s ease;
-  }
-  .card:hover{
-    box-shadow:0 12px 30px rgba(0,0,0,.8);
-  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Portal</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        /* NEW COLOR SCHEME: RED/BLACK for main pages, CYAN/BLUE for Prediction Tool */
+        :root {
+            /* Global Theme (Platforms/Plans/Payment) - Red/Black from previous step */
+            --bg: #000000; /* Pure Black Background */
+            --card: #1a0303; /* Very dark red/black for card backgrounds */
+            --muted: #8b0000; /* Darker red for muted text/lines */
+            --text: #f8f9fa; /* Bright white text */
+            --accent: #ff0000; /* Vibrant Red for main accent */
+            --accent-2: #ff3333; /* Slightly lighter red for gradients */
 
-  /* METALLIC STYLES */
-  .card.luxury-gold { border-color: #ffd700; background: linear-gradient(135deg, #4d3b00 0%, #292000 100%); }
-  .card.luxury-gold h3, .card.luxury-gold .price { color: #ffd700; text-shadow: 0 0 3px #ff4500; }
-  .card.refined-bronze { border-color: #8c7853; background: linear-gradient(135deg, #644a33 0%, #3e2d20 100%); color: #f0e6da; }
-  .card.electric-silver { border-color: #b0c4de; background: linear-gradient(135deg, #4d5d6a 0%, #2d3840 100%); color: #e0f2f1; }
-  /* END METALLIC STYLES */
+            /* Prediction Page Theme (NEW: Cyber Blue/Cyan for attractive look) */
+            --pred-bg: #030a1c; /* Deep Midnight Blue */
+            --pred-card-bg: #101c3d; /* Darker card with blue hint */
+            --pred-accent: #00eaff; /* Electric Cyan glow */
+            --pred-text: #e0f8ff; /* Light blue/white text */
 
-  /* General Button Improvement (Red Gradient for main pages) */
-  .btn{
-    display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:10px;padding:12px 14px;
-    background:linear-gradient(90deg,var(--accent),var(--accent-2));
-    color:#fff;
-    font-weight:700;cursor:pointer;transition:transform .06s ease, opacity .2s ease;text-decoration:none;
-    box-shadow: 0 4px 10px rgba(255, 0, 0, 0.6);
-  }
-  .btn:active{transform:translateY(1px) scale(.99)}
-  .btn.muted{
-    background:#37474f; 
-    color:var(--text);
-    box-shadow: none;
-  }
-  .btn.full{width:100%}
-  .header{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:14px}
-  .tag{font-size:.78rem;padding:6px 10px;border-radius:999px;background:#300000;border:1px solid rgba(255,255,255,.06);color:#ffaaaa}
-  .price{font-size:1rem;color:#ffcccc;margin-top:8px}
-  .tiny{font-size:.8rem;color:var(--muted)}
-  .section-title{margin:18px 0 10px;font-size:1rem;color:#ff5555;letter-spacing:.3px;text-transform:uppercase}
-  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  input, select{background:#1a0303;border:1px solid #4d0000;color:#dfe7ff;border-radius:10px;padding:12px 12px;font-size:1rem;outline:none;width:100%}
-  input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255, 0, 0, 0.4)}
-  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .hidden{display:none !important}
-  .center{text-align:center}
-  .qr{width:220px;height:auto;border-radius:14px;box-shadow:0 12px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06)}
-  
-  /* ==================================== */
-  /* Prediction Page Styles (CYAN/BLUE Theme - GLOW REDUCED) */
-  /* ==================================== */
-  #view-prediction {
-      /* Reduced glow effect */
-      background: radial-gradient(800px 400px at 50% -20%, rgba(0, 234, 255, .1), transparent), var(--pred-bg) !important;
-      color: var(--pred-text); /* Use light blue/white text */
-  }
-  
-  /* Make the title big and cyan */
-  #view-prediction h1 {
-      font-size: 1.8rem;
-      font-weight: 900;
-      color: var(--pred-accent); 
-      text-shadow: 0 0 3px rgba(0, 234, 255, 0.3); /* Reduced glow */
-  }
-  
-  #view-prediction .subtitle {
-      color: #70b8c6; /* Lighter muted blue */
-  }
+            /* Vivid Clean Colors */
+            --clear-good: #10ac60; /* Cleaner Green for WIN */
+            --clear-bad: #ff3333; /* Use red for LOSS/Danger */
+            --warning: #ffeb3b; /* Yellow warning */
+            --alert-red: #ff3333; /* Specific red for alerts */
 
-  /* Card and Stat Boxes */
-  #view-prediction .card {
-      border: 1px solid rgba(0, 234, 255, 0.1); /* Reduced border visibility */
-      box-shadow: 0 5px 15px rgba(0,0,0,.6); /* Reduced shadow/glow */
-      background: var(--pred-card-bg); 
-      border-radius: 14px; 
-  }
-  #view-prediction .stat {
-      border: 1px solid rgba(0, 234, 255, 0.1);
-      background: #0f244a; /* Darker blue background for stats */
-      padding: 12px;
-      border-radius: 10px;
-  }
-  #view-prediction .stat .label { color: #88a7cc; } /* Attractive color for label */
-  #view-prediction .stat .value {
-      color: var(--pred-accent);
-      font-weight: 800;
-      font-size: 1.2rem;
-  }
+            /* NEW: Button Color for action */
+            --action-button: #39ff14; /* Neon Green for Generate Prediction */
 
-  /* Input fields (Period) */
-  #view-prediction input {
-      background: #0f244a;
-      border: 1px solid rgba(0, 234, 255, 0.3);
-      color: var(--pred-text);
-  }
-  #view-prediction input:focus {
-      border-color: var(--pred-accent);
-      box-shadow: 0 0 0 2px rgba(0, 234, 255, 0.2); /* Reduced focus glow */
-  }
+            /* CUSTOM ADDITION FOR TARGET RANGE HIGHLIGHT */
+            --target-highlight-color: #39ff14; /* Neon Green/Yellow Green */
+            --target-font-size: 1.0rem; /* Slightly larger font */
 
-  /* Generate Prediction Button (Attractive Neon Green) */
-  #view-prediction button.btn:not(.muted):not(.good):not(.bad) {
-      background: var(--action-button);
-      color: #000; /* Black text for high contrast */
-      font-weight: 900;
-      box-shadow: 0 0 5px rgba(57, 255, 20, 0.5); /* Reduced glow */
-  }
-  
-  /* Prediction Pill (The main result box) - Electric Cyan */
-  #prediction-pill {
-      font-weight: 800;
-      background: linear-gradient(45deg, var(--pred-accent), #00a4b3);
-      color: var(--pred-card-bg); /* Dark blue text on bright cyan */
-      padding: 14px 28px;
-      border-radius: 999px;
-      box-shadow: 0 3px 10px rgba(0, 234, 255, 0.4); /* Reduced glow */
-      font-size: 1.6rem !important; 
-      text-transform: uppercase;
-  }
-  
-  /* Log box for number prediction */
-  #number-prediction-log {
-      margin-top: 10px;
-      font-size: 0.9rem;
-      color: var(--warning);
-      padding: 8px;
-      background: #101c3d; /* Dark blue background for log */
-      border: 1px solid #0f244a;
-      border-radius: 8px;
-      display: none; 
-  }
+            /* Wheel Colors */
+            --wheel-segment-1: #FF5252;
+            --wheel-segment-2: #FF9800;
+            --wheel-segment-3: #FFEB3B;
+            --wheel-segment-4: #4CAF50;
+            --wheel-segment-5: #2196F3;
+            --wheel-segment-6: #9C27B0;
+            --wheel-segment-7: #E91E63;
+            --wheel-segment-8: #00BCD4;
+            --wheel-segment-9: #8BC34A;
+        }
 
-  /* Win/Loss Button Colors (Vivid and Clean - Use Red/Green, but styled for the theme) */
-  #result-input .btn {
-      padding: 18px 12px;
-      font-size: 1.2rem;
-      font-weight: 800;
-      border-radius: 10px;
-      color: #000;
-  }
-  #result-input .good {
-      background: var(--clear-good); 
-      box-shadow: 0 4px 10px rgba(16, 172, 96, 0.5); 
-  }
-  #result-input .bad {
-      background: var(--clear-bad); 
-      box-shadow: 0 4px 10px rgba(255, 0, 0, 0.5); 
-  }
-  
-  /* Staking Plan display */
-  .staking-plan {
-      margin-top: 20px;
-      padding-top: 15px;
-      border-top: 1px solid rgba(0, 234, 255, 0.1); /* Cyan border */
-  }
-  #view-prediction .section-title {
-      color: var(--pred-accent);
-  }
-  .staking-plan .item {
-      color: #88a7cc; /* Attractive muted color */
-      border-bottom: 1px dashed rgba(0, 234, 255, 0.08);
-  }
-  .staking-plan .item.current {
-      color: var(--pred-accent);
-      background: rgba(0, 234, 255, 0.1); /* Cyan highlight */
-  }
-  
-  /* History Log */
-  #view-prediction .log {
-      background: var(--pred-card-bg);
-      border: 1px solid rgba(0, 234, 255, 0.2);
-  }
-  #view-prediction .pill {
-      border:1px solid #0f244a; 
-      background: #101c3d;
-      color:var(--pred-accent)
-  }
-  /* ==================================== */
-  /* END Prediction Page Styles */
-  /* ==================================== */
+        * {
+            box-sizing: border-box;
+        }
 
+        /* Radial gradient for the main theme (Red Glow) */
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(1200px 600px at 50% -20%, rgba(255, 0, 0, .2), transparent), var(--bg);
+            color: var(--text);
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial, sans-serif;
+        }
 
-  .pill{padding:6px 10px;border-radius:999px;font-size:.85rem;border:1px solid #4d0000;background:#300000;color:#ffaaaa} /* Red pill for non-prediction pages */
-  .good{color:var(--clear-good)}
-  .bad{color:var(--clear-bad)}
-  .log{background:#1a0303;border:1px solid #4d0000;border-radius:14px;max-height:220px;overflow:auto;padding:10px}
-  .log .item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
-  footer{margin-top:40px;color:#ffaaaa;text-align:center;font-size:.8rem}
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 16px;
+        }
 
-  /* Admin Panel Button Style (Hidden in right corner) */
-  #admin-button {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    width: 40px;
-    height: 40px;
-    background: var(--card);
-    border: 1px solid rgba(255,255,255,.06);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 1000;
-    color: var(--muted);
-    font-size: 0.7rem;
-    font-weight: bold;
-    opacity: 0.1; /* Hidden to user */
-    transition: opacity 0.3s ease;
-  }
-  #admin-button:hover {
-    opacity: 0.5;
-  }
-</style>
+        h1, h2, h3 {
+            margin: 0 0 10px;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: .95rem;
+            margin-bottom: 18px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        @media (min-width: 720px) {
+            .grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        /* IMPROVED GENERAL CARD DESIGN */
+        .card {
+            background: var(--card);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .6);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .8);
+        }
+
+        /* METALLIC STYLES */
+        .card.luxury-gold {
+            border-color: #ffd700;
+            background: linear-gradient(135deg, #4d3b00 0%, #292000 100%);
+        }
+
+        .card.luxury-gold h3, .card.luxury-gold .price {
+            color: #ffd700;
+            text-shadow: 0 0 3px #ff4500;
+        }
+
+        .card.refined-bronze {
+            border-color: #8c7853;
+            background: linear-gradient(135deg, #644a33 0%, #3e2d20 100%);
+            color: #f0e6da;
+        }
+
+        .card.electric-silver {
+            border-color: #b0c4de;
+            background: linear-gradient(135deg, #4d5d6a 0%, #2d3840 100%);
+            color: #e0f2f1;
+        }
+        /* END METALLIC STYLES */
+
+        /* ADDED STYLE FOR HIGHLIGHTED TARGET RANGE */
+        .target-highlight {
+            font-size: var(--target-font-size);
+            font-weight: 700;
+            color: var(--target-highlight-color);
+            margin-bottom: 5px; /* Add a little space before price */
+        }
+
+        /* General Button Improvement (Red Gradient for main pages) */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 14px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform .06s ease, opacity .2s ease;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(255, 0, 0, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(1px) scale(.99);
+        }
+
+        .btn.muted {
+            background: #37474f;
+            color: var(--text);
+            box-shadow: none;
+        }
+
+        .btn.full {
+            width: 100%;
+        }
+
+        .header {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .tag {
+            font-size: .78rem;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #300000;
+            border: 1px solid rgba(255, 255, 255, .06);
+            color: #ffaaaa;
+        }
+
+        .price {
+            font-size: 1rem;
+            color: #ffcccc;
+            margin-top: 8px;
+        }
+
+        .tiny {
+            font-size: .8rem;
+            color: var(--muted);
+        }
+
+        .section-title {
+            margin: 18px 0 10px;
+            font-size: 1rem;
+            color: #ff5555;
+            letter-spacing: .3px;
+            text-transform: uppercase;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        input, select {
+            background: #1a0303;
+            border: 1px solid #4d0000;
+            color: #dfe7ff;
+            border-radius: 10px;
+            padding: 12px 12px;
+            font-size: 1rem;
+            outline: none;
+            width: 100%;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.4);
+        }
+
+        .two {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .qr {
+            width: 220px;
+            height: auto;
+            border-radius: 14px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, .35), inset 0 0 0 1px rgba(255, 255, 255, .06);
+        }
+
+        /* ==================================== */
+        /* Prediction Page Styles (CYAN/BLUE Theme - GLOW REDUCED) */
+        /* ==================================== */
+        #view-prediction {
+            /* Reduced glow effect */
+            background: radial-gradient(800px 400px at 50% -20%, rgba(0, 234, 255, .1), transparent), var(--pred-bg) !important;
+            color: var(--pred-text); /* Use light blue/white text */
+        }
+
+        /* Make the title big and cyan */
+        #view-prediction h1 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--pred-accent);
+            text-shadow: 0 0 3px rgba(0, 234, 255, 0.3); /* Reduced glow */
+        }
+
+        #view-prediction .subtitle {
+            color: #70b8c6; /* Lighter muted blue */
+        }
+
+        /* Card and Stat Boxes */
+        #view-prediction .card {
+            border: 1px solid rgba(0, 234, 255, 0.1); /* Reduced border visibility */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, .6); /* Reduced shadow/glow */
+            background: var(--pred-card-bg);
+            border-radius: 14px;
+        }
+
+        #view-prediction .stat {
+            border: 1px solid rgba(0, 234, 255, 0.1);
+            background: #0f244a; /* Darker blue background for stats */
+            padding: 12px;
+            border-radius: 10px;
+        }
+
+        #view-prediction .stat .label {
+            color: #88a7cc;
+        } /* Attractive color for label */
+        #view-prediction .stat .value {
+            color: var(--pred-accent);
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+
+        /* Input fields (Period) */
+        #view-prediction input {
+            background: #0f244a;
+            border: 1px solid rgba(0, 234, 255, 0.3);
+            color: var(--pred-text);
+        }
+
+        #view-prediction input:focus {
+            border-color: var(--pred-accent);
+            box-shadow: 0 0 0 2px rgba(0, 234, 255, 0.2); /* Reduced focus glow */
+        }
+
+        /* Generate Prediction Button (Attractive Neon Green) */
+        #view-prediction button.btn:not(.muted):not(.good):not(.bad) {
+            background: var(--action-button);
+            color: #000; /* Black text for high contrast */
+            font-weight: 900;
+            box-shadow: 0 0 5px rgba(57, 255, 20, 0.5); /* Reduced glow */
+        }
+
+        /* Prediction Pill (The main result box) - Electric Cyan */
+        #prediction-pill {
+            font-weight: 800;
+            background: linear-gradient(45deg, var(--pred-accent), #00a4b3);
+            color: var(--pred-card-bg); /* Dark blue text on bright cyan */
+            padding: 14px 28px;
+            border-radius: 999px;
+            box-shadow: 0 3px 10px rgba(0, 234, 255, 0.4); /* Reduced glow */
+            font-size: 1.6rem !important;
+            text-transform: uppercase;
+        }
+
+        /* Log box for number prediction */
+        #number-prediction-log {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--warning);
+            padding: 8px;
+            background: #101c3d; /* Dark blue background for log */
+            border: 1px solid #0f244a;
+            border-radius: 8px;
+            display: none;
+        }
+
+        /* Win/Loss Button Colors (Vivid and Clean - Use Red/Green, but styled for the theme) */
+        #result-input .btn {
+            padding: 18px 12px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            border-radius: 10px;
+            color: #000;
+        }
+
+        #result-input .good {
+            background: var(--clear-good);
+            box-shadow: 0 4px 10px rgba(16, 172, 96, 0.5);
+        }
+
+        #result-input .bad {
+            background: var(--clear-bad);
+            box-shadow: 0 4px 10px rgba(255, 0, 0, 0.5);
+        }
+
+        /* Staking Plan display */
+        .staking-plan {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(0, 234, 255, 0.1); /* Cyan border */
+        }
+
+        #view-prediction .section-title {
+            color: var(--pred-accent);
+        }
+
+        .staking-plan .item {
+            color: #88a7cc; /* Attractive muted color */
+            border-bottom: 1px dashed rgba(0, 234, 255, 0.08);
+        }
+
+        .staking-plan .item.current {
+            color: var(--pred-accent);
+            background: rgba(0, 234, 255, 0.1); /* Cyan highlight */
+        }
+
+        /* History Log */
+        #view-prediction .log {
+            background: var(--pred-card-bg);
+            border: 1px solid rgba(0, 234, 255, 0.2);
+        }
+
+        #view-prediction .pill {
+            border: 1px solid #0f244a;
+            background: #101c3d;
+            color: var(--pred-accent);
+        }
+        /* ==================================== */
+        /* END Prediction Page Styles */
+        /* ==================================== */
+
+        .pill {
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: .85rem;
+            border: 1px solid #4d0000;
+            background: #300000;
+            color: #ffaaaa;
+        } /* Red pill for non-prediction pages */
+        .good {
+            color: var(--clear-good);
+        }
+
+        .bad {
+            color: var(--clear-bad);
+        }
+
+        .log {
+            background: #1a0303;
+            border: 1px solid #4d0000;
+            border-radius: 14px;
+            max-height: 220px;
+            overflow: auto;
+            padding: 10px;
+        }
+
+        .log .item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed rgba(255, 255, 255, .06);
+        }
+
+        footer {
+            margin-top: 40px;
+            color: #ffaaaa;
+            text-align: center;
+            font-size: .8rem;
+        }
+
+        /* Admin Panel Button Style (Hidden in right corner) */
+        #admin-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            background: var(--card);
+            border: 1px solid rgba(255, 255, 255, .06);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+            color: var(--muted);
+            font-size: 0.7rem;
+            font-weight: bold;
+            opacity: 0.1; /* Hidden to user */
+            transition: opacity 0.3s ease;
+        }
+
+        #admin-button:hover {
+            opacity: 0.5;
+        }
+
+        /* WHEEL SPIN STYLES - IMPROVED */
+        #wheel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            transition: transform 5s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.3);
+            border: 4px solid #fff;
+        }
+
+        .wheel-segment {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: bottom right;
+            left: 0;
+            top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: #000;
+            font-size: 18px;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.7);
+            overflow: hidden;
+        }
+
+        .segment-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            transform-origin: center;
+            font-weight: 900;
+            color: #000;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.7);
+            z-index: 2;
+        }
+
+        .wheel-center {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: #000;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+            border: 3px solid #fff;
+            font-size: 14px;
+        }
+
+        .wheel-pointer {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 40px;
+            background: #ff0000;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            z-index: 5;
+            filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.7));
+        }
+
+        .spin-button {
+            margin-top: 30px;
+            padding: 15px 30px;
+            background: linear-gradient(90deg, #ff0000, #ff3333);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(255, 0, 0, 0.7);
+            transition: all 0.3s ease;
+        }
+
+        .spin-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(255, 0, 0, 0.8);
+        }
+
+        .spin-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .discount-result {
+            margin-top: 25px;
+            padding: 20px;
+            background: var(--card);
+            border-radius: 12px;
+            text-align: center;
+            display: none;
+            border: 2px solid var(--action-button);
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.3);
+        }
+
+        .discount-amount {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--action-button);
+            margin: 15px 0;
+            text-shadow: 0 0 10px rgba(57, 255, 20, 0.5);
+        }
+
+        .discount-text {
+            font-size: 1.1rem;
+            color: var(--text);
+            margin-bottom: 15px;
+        }
+
+        .wheel-title {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--text);
+        }
+
+        .wheel-title h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+        }
+
+        .wheel-title .subtitle {
+            color: #ffaaaa;
+            font-size: 1rem;
+        }
+
+        /* Improved VIP Warning */
+        #vip-warning-note {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 2px solid var(--alert-red);
+            background: linear-gradient(135deg, rgba(255, 51, 51, 0.15), rgba(255, 0, 0, 0.1));
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+        }
+
+        #vip-warning-note strong {
+            color: var(--alert-red);
+            font-size: 1.1rem;
+            display: block;
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+        }
+
+        #vip-warning-note p {
+            color: var(--text);
+            font-size: 1rem;
+            margin-top: 12px;
+            line-height: 1.5;
+        }
+    </style>
 </head>
 <body>
-  <div id="admin-button" onclick="openAdminPanel()">ADM</div>
-  
-  <div class="container">
-    <section id="view-platforms" class="card">
-      <div class="header">
-        <div>
-          <h1>Choose your platform</h1>
-          <div class="subtitle">Pick where you want predictions. Payment + UTR verification required before starting.</div>
-        </div>
-        <span class="tag">Step 1 of 3</span>
-      </div>
-      <div class="grid" id="platforms-grid"></div>
-    </section>
+    <div class="container">
+        <div id="admin-button" onclick="openAdminPanel()">ADM</div>
 
-    <section id="view-plans" class="card hidden">
-      <div class="header">
-        <div>
-          <h1>Choose your plan</h1>
-          <div class="subtitle">Select target range. Price is one-time for this session.</div>
-        </div>
-        <span class="tag">Step 2 of 3</span>
-      </div>
-      <div class="section-title">Standard</div>
-      <div class="grid" id="standard-plans"></div>
-      <div class="section-title">Premium</div>
-      <div class="grid" id="premium-plans"></div>
-      <div class="row" style="margin-top:14px">
-        <button class="btn muted" onclick="goBackTo('view-platforms')">← Back</button>
-      </div>
-    </section>
-
-    <section id="view-payment" class="card hidden">
-      <div class="header">
-        <div>
-          <h1>Scan & Pay</h1>
-          <div class="subtitle">Use any UPI app to pay the plan price. Then enter the 12‑digit UTR to continue.</div>
-        </div>
-        <span class="tag">Step 3 of 3</span>
-      </div>
-      
-      <div id="vip-warning-note" class="hidden" style="margin-bottom: 20px; padding: 15px; border: 2px solid var(--alert-red); background-color: rgba(255, 51, 51, 0.1); border-radius: 10px;">
-          <strong style="color:var(--alert-red);">⚠️ IMPORTANT WARNING / ZARURI CHETAVANI ⚠️</strong>
-          <p style="color:var(--text); font-size: 0.95rem; margin-top: 8px;">
-              **ENGLISH:** Please use a separate mobile device for payment. Due to technical limitations, payments over ₹2000 may fail if processed via screenshot.
-          </p>
-          <p style="color:var(--text); font-size: 0.95rem; margin-top: 5px;">
-              **HINDI:** कृपया भुगतान (payment) के लिए दूसरे फ़ोन का इस्तेमाल करें क्योंकि स्क्रीनशॉट लेकर सिर्फ़ ₹2000 का ही भुगतान (payment) किया जा सकता है।
-          </p>
-      </div>
-      <div class="center">
-        <img src="qr.png" class="qr" alt="Payment QR Code"/>
-      </div>
-      
-      <div class="card" style="margin-top:20px; padding:12px;">
-        <div class="row" style="margin:0; align-items:center; gap:10px;">
-          <div style="flex-grow:1">
-            <label class="tiny">Enter 12-digit UTR</label>
-            <input id="utr" maxlength="12" inputmode="numeric" placeholder="e.g., 501234567890" />
-          </div>
-          <button class="btn" style="height:44px;" onclick="verifyUTR()">Submit UTR</button>
-        </div>
-        <div id="utr-status" class="center tiny" style="margin-top:10px; color:var(--muted)">Waiting for UTR...</div>
-      </div>
-
-      <div class="row" style="margin-top:14px">
-        <a class="btn full muted" href="https://t.me/Nskskssiwi" target="_blank">Payment complete but not open</a>
-      </div>
-
-      <div class="row" style="margin-top:14px">
-        <button class="btn muted" onclick="goBackTo('view-plans')">← Back</button>
-      </div>
-    </section>
-    
-    <section id="view-admin" class="card hidden">
-      <h1>Admin Panel</h1>
-      <div class="subtitle">Pending UTR Approvals (456)</div>
-      <div id="admin-actions" style="margin-bottom:15px;">
-        <button class="btn full bad" style="padding:10px 12px; font-size:0.9rem; background:#4a1212; border:1px solid #7c0000;" onclick="clearAllPayments()">⚠️ Clear All Approvals Data (DANGER)</button>
-        <div class="tiny" style="margin-top:5px; text-align:center; color:var(--warning)">This will delete ALL payment records from Firebase. Use to clear old data.</div>
-      </div>
-      <div id="pending-utrs">Loading...</div>
-      <div class="row" style="margin-top:14px">
-        <button class="btn muted" onclick="goBackTo('view-platforms')">← Back to Portal</button>
-      </div>
-    </section>
-
-    <section id="view-prediction" class="card hidden">
-      <div class="header">
-        <div>
-          <h1>Prediction Tool</h1>
-          <div class="subtitle">Follow the instructions. Bet on Color/Big/Small and follow the 3 stake levels.</div>
-        </div>
-        <span class="pill" id="platform-pill">Platform</span>
-      </div>
-      <div class="two">
-        <div class="stat"><span class="label">Target Range</span><span class="value" id="target-range">–</span></div>
-        <div class="stat"><span class="label">Current Balance</span><span class="value" id="balance">–</span></div>
-      </div>
-      
-      <div class="card" style="margin-top:14px">
-        <div class="two">
-          <div>
-            <label class="tiny">Last 3 digits of period</label>
-            <input id="period" maxlength="3" inputmode="numeric" placeholder="e.g., 256" />
-          </div>
-          <div style="align-self:end">
-            <button class="btn full" onclick="makePrediction()">Generate Prediction</button>
-          </div>
-        </div>
-        <div class="center" style="margin-top:12px">
-          <div class="pill" id="prediction-pill">—</div>
-          
-          <div id="number-prediction-log" style="display:none;"></div>
-
-          <div class="tiny" id="step-box" style="margin-top:8px; display:none;">Step: —</div>
-          
-          <div id="status" style="margin-top:10px; font-weight:bold; color:var(--pred-text)">Waiting for period...</div>
-        </div>
-        
-        <div class="staking-plan">
-            <div class="section-title" style="margin:5px 0 10px; font-size:0.9rem; color:var(--pred-accent)">Staking Plan (Current Balance Risk)</div>
-            <div id="staking-levels">
+        <section id="view-platforms">
+            <div class="header">
+                <div>
+                    <h1>Choose your platform</h1>
+                    <div class="subtitle">Pick where you want predictions. Payment + UTR verification required before starting.</div>
                 </div>
-        </div>
-        </div>
-      
-      <div class="card" style="margin-top:14px" id="result-input" class="hidden">
-        <div class="section-title">Record Result</div>
-        <div class="two">
-          <button class="btn full good" onclick="recordResult(true)">WIN</button>
-          <button class="btn full bad" onclick="recordResult(false)">LOSS</button>
-        </div>
-      </div>
+                <span class="tag">Step 1 of 3</span>
+            </div>
+            <div class="grid" id="platforms-grid">
+                <!-- Platforms will be populated by JavaScript -->
+            </div>
+        </section>
 
-      <div class="section-title" style="margin-top:20px">History</div>
-      <div class="log" id="history">
-        </div>
+        <section id="view-wheel" class="hidden">
+            <div class="card" style="max-width: 450px; margin: 0 auto; background: rgba(26, 3, 3, 0.95);">
+                <div class="wheel-title">
+                    <h2>Spin for Discount!</h2>
+                    <div class="subtitle">Get a one-time discount on your plan</div>
+                </div>
+                <div class="wheel-container">
+                    <div class="wheel-pointer"></div>
+                    <div class="wheel" id="wheel">
+                        <!-- Wheel segments will be populated by JavaScript -->
+                    </div>
+                    <div class="wheel-center">SPIN</div>
+                </div>
+                <div class="center">
+                    <button class="spin-button" id="spin-button">SPIN THE WHEEL</button>
+                </div>
+                <div class="discount-result" id="discount-result">
+                    <div class="discount-amount" id="discount-amount">20% Discount</div>
+                    <div class="discount-text" id="discount-text">Your plan prices will be reduced by this amount</div>
+                    <button class="btn full" style="margin-top: 15px; font-size: 1.1rem; padding: 15px;" id="continue-button">Continue to Plans</button>
+                </div>
+            </div>
+        </section>
 
-      <div class="row" style="margin-top:14px">
-        <button class="btn muted" onclick="goBackTo('view-platforms')">← End Session</button>
-      </div>
-    </section>
+        <section id="view-plans" class="card hidden">
+            <div class="header">
+                <div>
+                    <h1>Choose your plan</h1>
+                    <div class="subtitle">Select target range. Price is one-time for this session.</div>
+                </div>
+                <span class="tag">Step 2 of 3</span>
+            </div>
+            <div class="section-title">Standard</div>
+            <div class="grid" id="standard-plans"></div>
+            <div class="section-title">Premium</div>
+            <div class="grid" id="premium-plans"></div>
+            <div class="row" style="margin-top:14px">
+                <button class="btn muted" onclick="goBackTo('view-platforms')">← Back</button>
+            </div>
+        </section>
 
-    <footer>&copy; 2025 Prediction Portal</footer>
-  </div>
+        <section id="view-payment" class="card hidden">
+            <div class="header">
+                <div>
+                    <h1>Scan & Pay</h1>
+                    <div class="subtitle">Use any UPI app to pay the plan price. Then enter the 12‑digit UTR to continue.</div>
+                </div>
+                <span class="tag">Step 3 of 3</span>
+            </div>
+            <div id="vip-warning-note" class="hidden" style="margin-bottom: 20px;">
+                <strong>⚠️ IMPORTANT WARNING / ZARURI CHETAVANI ⚠️</strong>
+                <p> **ENGLISH:** Please use a separate mobile device for payment. Due to technical limitations, payments over ₹2000 may fail if processed via screenshot. </p>
+                <p> **HINDI:** कृपया भुगतान (payment) के लिए दूसरे फ़ोन का इस्तेमाल करें क्योंकि स्क्रीनशॉट लेकर सिर्फ़ ₹2000 का ही भुगतान (payment) किया जा सकता है। </p>
+            </div>
+            <div class="center">
+                <img src="qr.png" class="qr" alt="Payment QR Code"/>
+            </div>
+            <div class="card" style="margin-top:20px; padding:12px;">
+                <div class="row" style="margin:0; align-items:center; gap:10px;">
+                    <div style="flex-grow:1">
+                        <label class="tiny">Enter 12-digit UTR</label>
+                        <input id="utr" maxlength="12" inputmode="numeric" placeholder="e.g., 501234567890" />
+                    </div>
+                    <button class="btn" style="height:44px;" onclick="verifyUTR()">Submit UTR</button>
+                </div>
+                <div id="utr-status" class="center tiny" style="margin-top:10px; color:var(--muted)">Waiting for UTR...</div>
+            </div>
+            <div class="row" style="margin-top:14px">
+                <a class="btn full muted" href="https://t.me/Nskskssiwi" target="_blank">Payment complete but not open</a>
+            </div>
+            <div class="row" style="margin-top:14px">
+                <button class="btn muted" onclick="goBackTo('view-plans')">← Back</button>
+            </div>
+        </section>
 
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+        <section id="view-admin" class="card hidden">
+            <h1>Admin Panel</h1>
+            <div class="subtitle">Pending UTR Approvals (456)</div>
+            <div id="admin-actions" style="margin-bottom:15px;">
+                <button class="btn full bad" style="padding:10px 12px; font-size:0.9rem; background:#4a1212; border:1px solid #7c0000;" onclick="clearAllPayments()">⚠️ Clear All Approvals Data (DANGER)</button>
+                <div class="tiny" style="margin-top:5px; text-align:center; color:var(--warning)">This will delete ALL payment records from Firebase. Use to clear old data.</div>
+            </div>
+            <div id="pending-utrs">Loading...</div>
+            <div class="row" style="margin-top:14px">
+                <button class="btn muted" onclick="goBackTo('view-platforms')">← Back to Portal</button>
+            </div>
+        </section>
 
-  <script>
-    // Utility for ID lookups
-    const $ = (id) => document.getElementById(id);
+        <section id="view-prediction" class="card hidden">
+            <div class="header">
+                <div>
+                    <h1>Prediction Tool</h1>
+                    <div class="subtitle">Follow the instructions. Bet on Color/Big/Small and follow the 3 stake levels.</div>
+                </div>
+                <span class="pill" id="platform-pill">Platform</span>
+            </div>
+            <div class="two">
+                <div class="stat"><span class="label">Target Range</span><span class="value" id="target-range">–</span></div>
+                <div class="stat"><span class="label">Current Balance</span><span class="value" id="balance">–</span></div>
+            </div>
+            <div class="card" style="margin-top:14px">
+                <div class="two">
+                    <div>
+                        <label class="tiny">Last 3 digits of period</label>
+                        <input id="period" maxlength="3" inputmode="numeric" placeholder="e.g., 256" />
+                    </div>
+                    <div style="align-self:end">
+                        <button class="btn full" onclick="makePrediction()">Generate Prediction</button>
+                    </div>
+                </div>
+                <div class="center" style="margin-top:12px">
+                    <div class="pill" id="prediction-pill">—</div>
+                    <div id="number-prediction-log" style="display:none;"></div>
+                    <div class="tiny" id="step-box" style="margin-top:8px; display:none;">Step: —</div>
+                    <div id="status" style="margin-top:10px; font-weight:bold; color:var(--pred-text)">Waiting for period...</div>
+                </div>
+                <div class="staking-plan">
+                    <div class="section-title" style="margin:5px 0 10px; font-size:0.9rem; color:var(--pred-accent)">Staking Plan (Current Balance Risk)</div>
+                    <div id="staking-levels">
+                    </div>
+                </div>
+            </div>
+            <div class="card" style="margin-top:14px" id="result-input" class="hidden">
+                <div class="section-title">Record Result</div>
+                <div class="two">
+                    <button class="btn full good" onclick="recordResult(true)">WIN</button>
+                    <button class="btn full bad" onclick="recordResult(false)">LOSS</button>
+                </div>
+            </div>
+            <div class="section-title" style="margin-top:20px">History</div>
+            <div class="log" id="history">
+            </div>
+            <div class="row" style="margin-top:14px">
+                <button class="btn muted" onclick="goBackTo('view-platforms')">← End Session</button>
+            </div>
+        </section>
 
-    // Initial State and Constants
-    const PLATFORMS = ["TASHAN WIN", "JALWA GAME", "DM WIN"]; 
-    
-    // Updated Plans (Original values kept for functionality)
-    const PLANS = [
-      { name: "HIGH RISK", low: 200, high: 1000, price: 150, type: "standard" },
-      { name: "Medium RISK", low: 500, high: 3000, price: 500, type: "standard" },
-      { name: "LOW RISK", low: 1000, high: 5000, price: 750, type: "standard" },
-      { name: "VIP 1", low: 500, high: 20000, price: 3000, type: "premium" },
-      { name: "VIP 2", low: 1000, high: 30000, price: 5000, type: "premium" },
-    ];
-    
-    const STAKE_PERCENTAGES = [0, 0.15, 0.30, 0.55]; 
-    const ADMIN_PASSWORD = "456";
+        <footer>&copy; 2025 Prediction Portal</footer>
+    </div>
 
-    let state = {
-      platform: null,
-      plan: null,
-      price: 0,
-      targetLow: 0,
-      targetHigh: 0,
-      balance: 0,
-      initialCycleBalance: 0, 
-      level: 1,
-      // 0: COLOR, 1: BS_NUMBER, 2: BS_RANDOM. 
-      // Starting mode is BS_RANDOM (Index 2) as per requirement.
-      currentModeIndex: 2, 
-      currentModeName: 'BS_RANDOM', 
-      pending: null,
-      utrListener: null,
-      adminListener: null,
-    };
-    
-    // Map index to Mode Name
-    const MODE_NAMES = ['COLOR', 'BS_NUMBER', 'BS_RANDOM'];
+    <script>
+        // Utility for ID lookups
+        const $ = (id) => document.getElementById(id);
 
-    // Firebase Setup (From User Input - Replicated from previous steps)
-    const firebaseConfig = {
-      apiKey: "AIzaSyBs7eQyMrcN8kJWMHl2ac2UZHlYQ6DypD8",
-      authDomain: "terminal-xxrr.firebaseapp.com",
-      databaseURL: "https://terminal-xxrr-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "terminal-xxrr",
-      storageBucket: "terminal-xxrr.firebasestorage.app",
-      messagingSenderId: "722753278120",
-      appId: "1:722753278120:web:bfa37aab39635a4e57f29d",
-      measurementId: "G-E3MZH3E1K5"
-    };
+        // Initial State and Constants
+        const PLATFORMS = ["TASHAN WIN", "JALWA GAME", "DM WIN"];
+        // Updated Plans (Original values kept for functionality)
+        const PLANS = [
+            { name: "HIGH RISK", low: 200, high: 1000, price: 150, type: "standard" },
+            { name: "Medium RISK", low: 500, high: 3000, price: 500, type: "standard" },
+            { name: "LOW RISK", low: 1000, high: 5000, price: 750, type: "standard" },
+            { name: "VIP 1", low: 500, high: 20000, price: 3000, type: "premium" },
+            { name: "VIP 2", low: 1000, high: 30000, price: 5000, type: "premium" },
+        ];
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const database = app.database();
+        const STAKE_PERCENTAGES = [0, 0.15, 0.30, 0.55];
+        const ADMIN_PASSWORD = "456";
 
+        // Wheel discount options (70,80,90% are only for show, user will never get them)
+        const WHEEL_SEGMENTS = [
+            { discount: 10, text: "10%", color: "var(--wheel-segment-1)" },
+            { discount: 20, text: "20%", color: "var(--wheel-segment-2)" },
+            { discount: 30, text: "30%", color: "var(--wheel-segment-3)" },
+            { discount: 40, text: "40%", color: "var(--wheel-segment-4)" },
+            { discount: 50, text: "50%", color: "var(--wheel-segment-5)" },
+            { discount: 60, text: "60%", color: "var(--wheel-segment-6)" },
+            { discount: 70, text: "70%", color: "var(--wheel-segment-7)" },
+            { discount: 80, text: "80%", color: "var(--wheel-segment-8)" },
+            { discount: 90, text: "90%", color: "var(--wheel-segment-9)" }
+        ];
 
-    // --- Core Functions ---
+        // Actual discounts user can get (20-60% with probabilities)
+        const ACTUAL_DISCOUNTS = [
+            { discount: 20, probability: 0.3 },  // 30% chance
+            { discount: 30, probability: 0.3 },  // 30% chance
+            { discount: 40, probability: 0.3 },  // 30% chance
+            { discount: 50, probability: 0.05 }, // 5% chance
+            { discount: 60, probability: 0.05 }  // 5% chance
+        ];
 
-    function show(viewId) {
-      document.querySelectorAll("section").forEach((section) => {
-        section.classList.add("hidden");
-      });
-      $(viewId).classList.remove("hidden");
-    }
+        let state = {
+            platform: null,
+            plan: null,
+            price: 0,
+            targetLow: 0,
+            targetHigh: 0,
+            balance: 0,
+            initialCycleBalance: 0,
+            level: 1, // 0: COLOR, 1: BS_NUMBER, 2: BS_RANDOM.
+            // Starting mode is BS_RANDOM (Index 2) as per requirement.
+            currentModeIndex: 2,
+            currentModeName: 'BS_RANDOM',
+            pending: null,
+            utrListener: null,
+            adminListener: null,
+            discount: 0, // New field to store discount percentage
+            hasSpunWheel: false // Track if user has already spun the wheel
+        };
 
-    function goBackTo(viewId) {
-      if (state.utrListener) {
-        const utr = $("utr").value.trim();
-        if(utr && state.plan) {
-            database.ref('payments/' + (state.plan + '-' + utr)).off('value', state.utrListener);
-        }
-        state.utrListener = null;
-      }
-      if (viewId !== 'view-admin' && state.adminListener) {
-          database.ref('payments').off('value', state.adminListener);
-          state.adminListener = null;
-      }
-      show(viewId);
-    }
-    
-    function calculateBetAmounts(baseBalance) {
-      const L1_PERCENT = STAKE_PERCENTAGES[1];
-      const L2_PERCENT = STAKE_PERCENTAGES[2];
-      
-      const bet1 = Math.round(baseBalance * L1_PERCENT);
-      const bet2 = Math.round(baseBalance * L2_PERCENT);
-      
-      const bet3 = baseBalance - bet1 - bet2; 
-      
-      return [0, bet1, bet2, bet3];
-    }
-    
-    function renderBettingLevels() {
-        const container = $("staking-levels");
-        container.innerHTML = '';
+        // Map index to Mode Name
+        const MODE_NAMES = ['COLOR', 'BS_NUMBER', 'BS_RANDOM'];
+
+        // Firebase Setup (From User Input - Replicated from previous steps)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBs7eQyMrcN8kJWMHl2ac2UZHlYQ6DypD8",
+            authDomain: "terminal-xxrr.firebaseapp.com",
+            databaseURL: "https://terminal-xxrr-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "terminal-xxrr",
+            storageBucket: "terminal-xxrr.firebasestorage.app",
+            messagingSenderId: "722753278120",
+            appId: "1:722753278120:web:bfa37aab39635a4e57f29d",
+            measurementId: "G-E3MZH3E1K5"
+        };
         
-        const currentLevel = state.level;
-        const betAmounts = calculateBetAmounts(state.initialCycleBalance); 
-        
-        if (currentLevel > 3 || state.initialCycleBalance <= 0) {
-             container.innerHTML = `<div class="item" style="color:var(--clear-bad); justify-content:center;">Session Over: Max Loss Reached or Balance Zero.</div>`;
-             return;
-        }
-        
-        for (let level = 1; level <= 3; level++) {
-            const betAmount = betAmounts[level];
-            
-            const item = document.createElement("div");
-            item.className = "item" + (level === currentLevel ? " current" : ""); 
-            
-            item.innerHTML = `
-                <span>Level ${level} ${level === currentLevel ? '(NEXT BET)' : ''} (Risk ${STAKE_PERCENTAGES[level] * 100}%)</span>
-                <span>₹${betAmount}</span>
-            `;
-            
-            container.appendChild(item);
-        }
-    }
-
-
-    function updateStats() {
-      $("balance").textContent = `₹${state.balance}`;
-      $("target-range").textContent = `₹${state.targetLow} - ₹${state.targetHigh}`;
-      
-      renderBettingLevels();
-      
-      $("platform-pill").textContent = state.platform + ' • ' + state.plan;
-
-      if (state.pending) {
-        $("result-input").classList.remove("hidden");
-      } else {
-        $("result-input").classList.add("hidden");
-      }
-    }
-
-    function appendHistory(item) {
-      const row = document.createElement("div");
-      row.className = "item";
-      row.innerHTML = `<span>${item.time} • Period ${item.period} • Bet ₹${item.bet} • ${item.pred}</span> <span class="${item.win ? 'good' : 'bad'}">${item.win ? 'WIN' : 'LOSS'}</span>`;
-      $("history").prepend(row);
-    }
-
-    // --- NEW PATTERN SWITCHING PREDICTION LOGIC ---
-
-    function makePrediction() {
-      const periodInput = $("period");
-      const period = periodInput.value.trim();
-      const level = state.level;
-      const numLog = $("number-prediction-log");
-      numLog.style.display = 'none'; // Hide log initially
-      numLog.innerHTML = '';
-      
-      if (period.length !== 3 || isNaN(period)) {
-        alert("Please enter the last 3 digits of the period.");
-        return;
-      }
-      
-      if (level > 3 || state.balance <= 0) {
-        alert("Maximum loss reached or balance is zero. Please end the session.");
-        return;
-      }
-      
-      const betAmounts = calculateBetAmounts(state.initialCycleBalance);
-      const bet = betAmounts[level];
-      
-      if (bet <= 0) {
-        alert("Calculated bet amount is zero. Please end the session.");
-        return;
-      }
-
-      let pred;
-      
-      state.currentModeName = MODE_NAMES[state.currentModeIndex];
-
-      if (state.currentModeName === 'COLOR') {
-        // Mode 0: COLOR (Red/Green - Random) - Used at 1st Loss (Level 2)
-        const colors = ["Red", "Green"];
-        pred = colors[Math.floor(Math.random() * colors.length)];
-
-      } else if (state.currentModeName === 'BS_NUMBER') {
-        // Mode 1: BS - Number Count (Big/Small based on 5 random numbers) - Used at 2nd Loss (Level 3)
-        let bigCount = 0;
-        let smallCount = 0;
-        let numbers = []; // Internal only, per user request (Hidden)
-        
-        for (let i = 0; i < 5; i++) {
-            const num = Math.floor(Math.random() * 10); // 0-9
-            numbers.push(num);
-            if (num >= 5) { // Big: 5, 6, 7, 8, 9
-                bigCount++;
-            } else { // Small: 0, 1, 2, 3, 4
-                smallCount++;
+        // Initialize Firebase only if not already initialized
+        let app, database;
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            database = app.database();
+        } catch (error) {
+            // Firebase might already be initialized
+            if (!/already exists/.test(error.message)) {
+                console.error('Firebase initialization error', error.stack);
             }
-        }
-        
-        if (bigCount > smallCount) {
-            pred = "Big";
-        } else if (smallCount > bigCount) {
-            pred = "Small";
-        } else {
-            // Tie breaker (50/50)
-            pred = Math.random() < 0.5 ? "Big" : "Small"; 
+            app = firebase.app();
+            database = app.database();
         }
 
-      } else { // state.currentModeName === 'BS_RANDOM'
-        // Mode 2: BS - Random (Big/Small - Random) - Used at Initial/Win (Level 1) & 3rd Loss (Level 4)
-        const bs = ["Big", "Small"];
-        pred = bs[Math.floor(Math.random() * bs.length)];
-      }
-      
-      // --- START: RANDOM OPPOSITE PREDICTION LOGIC ---
-      // UPDATED: Probability is now 0.35 (35%)
-      const REVERSAL_PROBABILITY = 0.35; 
-
-      if (Math.random() < REVERSAL_PROBABILITY) {
-          const originalPred = pred;
-          if (pred === 'Red') {
-              pred = 'Green';
-          } else if (pred === 'Green') {
-              pred = 'Red';
-          } else if (pred === 'Big') {
-              pred = 'Small';
-          } else if (pred === 'Small') {
-              pred = 'Big';
-          }
-          // Note: This logic is hidden from the user, so no UI change here.
-          // console.log(`[Hidden Reversal] Original: ${originalPred} -> Reversed: ${pred}`);
-      }
-      // --- END: RANDOM OPPOSITE PREDICTION LOGIC ---
-
-
-      // Update UI with prediction
-      $("prediction-pill").textContent = pred;
-      $("status").textContent = `Bet ₹${bet} on ${pred}. (Level ${state.level})`;
-      $("step-box").textContent = ''; // CLEAR STEP BOX
-      
-      state.pending = { period, pred, bet, ts: Date.now(), mode: state.currentModeName }; 
-      
-      periodInput.value = '';
-      $("result-input").classList.remove("hidden");
-    }
-
-    // --- Result Recording Logic ---
-
-    function recordResult(win) {
-      if (!state.pending) return;
-
-      const r = state.pending;
-      const modeUsed = r.mode;
-      state.pending = null; 
-
-      $("number-prediction-log").style.display = 'none'; // Hide log after result
-
-      if (win) {
-        state.balance += r.bet;
-        state.level = 1; // Reset level on win
-        state.initialCycleBalance = state.balance; // Start new 3-level cycle with new balance
-        
-        // **RULE: MODE STAYS THE SAME ON WIN**
-        // state.currentModeIndex remains unchanged
-        
-        $("status").textContent = "Win recorded. Generate next prediction.";
-        appendHistory({ time: new Date().toLocaleTimeString(), period: r.period, bet: r.bet, pred: r.pred, win: true });
-        $("step-box").textContent = '';
-
-      } else {
-        state.balance -= r.bet; // Deduct loss
-        state.level += 1; // Increase level on loss
-        
-        // **RULE: MODE SWITCHES ON LOSS - Cycle: 2 (BS_RANDOM) -> 0 (COLOR) -> 1 (BS_NUMBER) -> 2 (BS_RANDOM)**
-        if (state.currentModeIndex === 2) { 
-             // Current: BS_RANDOM (L1) -> Next: COLOR (L2)
-             state.currentModeIndex = 0; 
-        } else if (state.currentModeIndex === 0) { 
-             // Current: COLOR (L2) -> Next: BS_NUMBER (L3)
-             state.currentModeIndex = 1; 
-        } else if (state.currentModeIndex === 1) { 
-             // Current: BS_NUMBER (L3) -> Next: BS_RANDOM (L4 - Final Cycle)
-             // **FIXED: This completes the cycle back to the starting mode (2)**
-             state.currentModeIndex = 2; 
-        }
-        
-        state.currentModeName = MODE_NAMES[state.currentModeIndex];
-        
-        $("status").textContent = "Loss recorded. Prepare for next bet.";
-        appendHistory({ time: new Date().toLocaleTimeString(), period: r.period, bet: r.bet, pred: r.pred, win: false });
-
-        // Termination check (ends after 3rd loss, which is Level 4)
-        if (state.level > 3 || state.balance <= 0) {
-            state.balance = 0; 
-            $("status").textContent = "🔴 Max Loss Reached / Balance Zero. Session Over.";
-            updateStats();
-            setTimeout(() => {
-              alert("Session over: Max Loss Reached (3 consecutive losses).");
-              show("view-platforms");
-            }, 800);
-            return;
+        // --- Core Functions ---
+        function show(viewId) {
+            document.querySelectorAll("section").forEach((section) => {
+                section.classList.add("hidden");
+            });
+            $(viewId).classList.remove("hidden");
         }
 
-        $("step-box").textContent = '';
-      }
-
-      updateStats();
-
-      // Check target condition
-      if (state.balance >= state.targetHigh) {
-        $("status").textContent = "🎯 Target hit!";
-        setTimeout(() => {
-          alert("Congratulations! Your Target completed in this session.");
-          show("view-platforms");
-        }, 800);
-      } 
-    }
-
-
-    // --- View Navigation & Setup (Unchanged) ---
-
-    function setupPayment(plan) {
-      state.plan = plan.name;
-      state.price = plan.price;
-      state.targetLow = plan.low;
-      state.targetHigh = plan.high;
-
-      const isVIP = plan.price > 2000 || plan.name.includes("High");
-
-      showPayment(isVIP);
-    }
-    
-    function showPayment(showWarning = false) { 
-        show('view-payment');
-        $("utr").value = '';
-        $("utr").disabled = false;
-        
-        const utr = $("utr").value.trim();
-        if (state.utrListener && state.plan && utr) {
-            database.ref('payments/' + (state.plan + '-' + utr)).off('value', state.utrListener);
-            state.utrListener = null;
-        }
-        
-        document.querySelector("#view-payment .btn:not(.muted)").disabled = false;
-        $("utr-status").textContent = "Waiting for UTR...";
-        $("utr-status").style.color = "var(--muted)";
-        
-        if (showWarning) {
-             $("vip-warning-note").classList.remove("hidden");
-        } else {
-             $("vip-warning-note").classList.add("hidden");
-        }
-    }
-
-    function verifyUTR() {
-      const utr = $("utr").value.trim();
-      if (utr.length !== 12 || isNaN(utr)) {
-        alert("Please enter a valid 12-digit UTR.");
-        return;
-      }
-      
-      if (!state.plan || !state.platform) {
-          alert("Platform or Plan not selected. Please go back.");
-          return;
-      }
-      
-      const utrId = state.plan + '-' + utr;
-      
-      $("utr-status").textContent = "Submitting UTR to Admin Panel...";
-      $("utr").disabled = true;
-      document.querySelector("#view-payment .btn:not(.muted)").disabled = true;
-      
-      database.ref('payments/' + utrId).set({
-        utr: utr,
-        plan: state.plan,
-        amount: state.price,
-        platform: state.platform,
-        targetLow: state.targetLow, 
-        targetHigh: state.targetHigh,
-        submittedAt: new Date().toISOString(),
-        status: 'pending'
-      }).then(() => {
-        $("utr-status").textContent = "Waiting for Admin Approval...";
-        $("utr-status").style.color = "var(--warning)";
-        
-        const utrRef = database.ref('payments/' + utrId);
-        
-        if (state.utrListener) {
-            utrRef.off('value', state.utrListener);
+        function goBackTo(viewId) {
+            if (state.utrListener) {
+                const utr = $("utr").value.trim();
+                if (utr && state.plan) {
+                    database.ref('payments/' + (state.plan + '-' + utr)).off('value', state.utrListener);
+                }
+                state.utrListener = null;
+            }
+            if (viewId !== 'view-admin' && state.adminListener) {
+                database.ref('payments').off('value', state.adminListener);
+                state.adminListener = null;
+            }
+            show(viewId);
         }
 
-        state.utrListener = utrRef.on('value', (snapshot) => {
-          const data = snapshot.val();
-          
-          if (data && data.status === 'approved') {
-            utrRef.off('value', state.utrListener);
-            state.utrListener = null;
-
-            $("utr-status").textContent = "Payment Approved! Starting session...";
-            $("utr-status").style.color = "var(--clear-good)";
-
-            // Session Start State Reset
-            state.balance = data.targetLow || state.targetLow;
-            state.initialCycleBalance = state.balance;
-            state.targetLow = data.targetLow || state.targetLow;
-            state.targetHigh = data.targetHigh || state.targetHigh;
-            state.level = 1;
-            state.pending = null;
-            state.currentModeIndex = 2; // Start at BS_RANDOM (Index 2)
-            
-            updateStats();
-            
-            setTimeout(() => {
-              show('view-prediction');
-            }, 500);
-            
-          } else if (data && data.status === 'rejected') {
-            utrRef.off('value', state.utrListener);
-            state.utrListener = null;
-
-            $("utr-status").textContent = "Payment Rejected. Please contact support.";
-            $("utr-status").style.color = "var(--clear-bad)";
-            $("utr").disabled = false;
-            document.querySelector("#view-payment .btn:not(.muted)").disabled = false;
-          }
-        });
-      }).catch(error => {
-        console.error("Firebase submission error:", error);
-        alert("Error submitting UTR: " + error.message);
-        $("utr-status").textContent = "Error submitting UTR. Please contact support.";
-        $("utr-status").style.color = "var(--clear-bad)";
-        $("utr").disabled = false;
-        document.querySelector("#view-payment .btn:not(.muted)").disabled = false;
-      });
-    }
-
-    // --- Admin Panel Functions (Unchanged) ---
-    
-    function clearAllPayments() {
-        if (!confirm("⚠️ DANGER: Are you sure you want to delete ALL payment records from the Admin Panel (Firebase)? This action is irreversible.")) {
-            return;
+        function calculateBetAmounts(baseBalance) {
+            const L1_PERCENT = STAKE_PERCENTAGES[1];
+            const L2_PERCENT = STAKE_PERCENTAGES[2];
+            const bet1 = Math.round(baseBalance * L1_PERCENT);
+            const bet2 = Math.round(baseBalance * L2_PERCENT);
+            const bet3 = baseBalance - bet1 - bet2;
+            return [0, bet1, bet2, bet3];
         }
 
-        database.ref('payments').set(null).then(() => {
-            alert("All payment records cleared successfully from Firebase.");
-            renderAdminPanel({});
-        }).catch(error => {
-            alert("Error clearing data: " + error.message);
-        });
-    }
+        function renderBettingLevels() {
+            const container = $("staking-levels");
+            container.innerHTML = '';
+            const currentLevel = state.level;
+            const betAmounts = calculateBetAmounts(state.initialCycleBalance);
 
+            if (currentLevel > 3 || state.initialCycleBalance <= 0) {
+                container.innerHTML = `<div class="item" style="color:var(--clear-bad); justify-content:center;">Session Over: Max Loss Reached or Balance Zero.</div>`;
+                return;
+            }
 
-    function openAdminPanel() {
-      const pass = prompt("Enter Admin Password:");
-      if (pass === ADMIN_PASSWORD) {
-        show('view-admin');
-        startAdminListener();
-      } else if (pass !== null) {
-        alert("Incorrect Password.");
-      }
-    }
-
-    function startAdminListener() {
-        if (state.adminListener) {
-            database.ref('payments').off('value', state.adminListener);
-        }
-        
-        const ref = database.ref('payments');
-        state.adminListener = ref.on('value', (snapshot) => {
-            const utrs = snapshot.val();
-            renderAdminPanel(utrs);
-        }, (error) => {
-            console.error("Firebase Admin Listener Error:", error);
-            $("pending-utrs").innerHTML = `<div class="bad">Error loading data: ${error.message}</div>`;
-        });
-    }
-    
-    function renderAdminPanel(utrs) {
-        const container = $("pending-utrs");
-        container.innerHTML = '';
-        let pendingFound = false;
-
-        for (const utrId in utrs) {
-            const data = utrs[utrId];
-            
-            if (data && data.status === 'pending') {
-                pendingFound = true;
-                const row = document.createElement("div");
-                row.className = "card";
-                row.style.marginBottom = "10px";
-                row.style.padding = "10px";
-                
-                row.innerHTML = `
-                    <div style="font-size:0.9rem; padding-bottom:4px">
-                        UTR: <span style="font-weight:bold">${data.utr}</span>
-                    </div>
-                    <div style="font-size:0.85rem; color:#cde4ff; padding-bottom:8px;">
-                        Plan: <span style="font-weight:bold">${data.plan}</span> (Target: ₹${data.targetLow || '?'} - ₹${data.targetHigh || '?'})
-                    </div>
-                    <div style="font-size:0.8rem; color:var(--muted); padding-bottom:10px;">
-                        Platform: ${data.platform} | Payment: ₹${data.amount}
-                    </div>
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn full good" style="padding:8px" onclick="adminAction('${utrId}', 'approved')">Approve</button>
-                        <button class="btn full bad" style="padding:8px" onclick="adminAction('${utrId}', 'rejected')">Reject</button>
-                    </div>
+            for (let level = 1; level <= 3; level++) {
+                const betAmount = betAmounts[level];
+                const item = document.createElement("div");
+                item.className = "item" + (level === currentLevel ? " current" : "");
+                item.innerHTML = `
+                    <span>Level ${level} ${level === currentLevel ? '(NEXT BET)' : ''} (Risk ${STAKE_PERCENTAGES[level] * 100}%)</span>
+                    <span>₹${betAmount}</span>
                 `;
-                container.appendChild(row);
+                container.appendChild(item);
             }
         }
 
-        if (!pendingFound) {
-            container.innerHTML = '<div class="pill">No pending approvals.</div>';
+        function updateStats() {
+            $("balance").textContent = `₹${state.balance}`;
+            $("target-range").textContent = `₹${state.targetLow} - ₹${state.targetHigh}`;
+            renderBettingLevels();
+            $("platform-pill").textContent = state.platform + ' • ' + state.plan;
+            if (state.pending) {
+                $("result-input").classList.remove("hidden");
+            } else {
+                $("result-input").classList.add("hidden");
+            }
         }
-    }
 
-    function adminAction(utrId, status) {
-        if(confirm(`Are you sure you want to ${status} UTR: ${utrId}?`)) {
-             database.ref('payments/' + utrId).update({
-                status: status,
-                adminTime: new Date().toLocaleTimeString(),
-                adminUser: 'Admin'
-            }).then(() => {
-                // UI update will be handled by the listener
-            }).catch(error => {
-                alert(`Error updating Firebase: ${error.message}`);
+        function appendHistory(item) {
+            const row = document.createElement("div");
+            row.className = "item";
+            row.innerHTML = `<span>${item.time} • Period ${item.period} • Bet ₹${item.bet} • ${item.pred}</span>
+                             <span class="${item.win ? 'good' : 'bad'}">${item.win ? 'WIN' : 'LOSS'}</span>`;
+            $("history").prepend(row);
+        }
+
+        // --- NEW PATTERN SWITCHING PREDICTION LOGIC ---
+        function makePrediction() {
+            const periodInput = $("period");
+            const period = periodInput.value.trim();
+            const level = state.level;
+            const numLog = $("number-prediction-log");
+            numLog.style.display = 'none'; // Hide log initially
+            numLog.innerHTML = '';
+
+            if (period.length !== 3 || isNaN(period)) {
+                alert("Please enter the last 3 digits of the period.");
+                return;
+            }
+
+            if (level > 3 || state.balance <= 0) {
+                alert("Maximum loss reached or balance is zero. Please end the session.");
+                return;
+            }
+
+            const betAmounts = calculateBetAmounts(state.initialCycleBalance);
+            const bet = betAmounts[level];
+            if (bet <= 0) {
+                alert("Calculated bet amount is zero. Please end the session.");
+                return;
+            }
+
+            let pred;
+            state.currentModeName = MODE_NAMES[state.currentModeIndex];
+
+            if (state.currentModeName === 'COLOR') {
+                // Mode 0: COLOR (Red/Green - Random) - Used at 1st Loss (Level 2)
+                const colors = ["Red", "Green"];
+                pred = colors[Math.floor(Math.random() * colors.length)];
+            } else if (state.currentModeName === 'BS_NUMBER') {
+                // Mode 1: BS - Number Count (Big/Small based on 5 random numbers) - Used at 2nd Loss (Level 3)
+                let bigCount = 0;
+                let smallCount = 0;
+                let numbers = []; // Internal only, per user request (Hidden)
+
+                for (let i = 0; i < 5; i++) {
+                    const num = Math.floor(Math.random() * 10); // 0-9
+                    numbers.push(num);
+                    if (num >= 5) { // Big: 5, 6, 7, 8, 9
+                        bigCount++;
+                    } else { // Small: 0, 1, 2, 3, 4
+                        smallCount++;
+                    }
+                }
+
+                if (bigCount > smallCount) {
+                    pred = "Big";
+                } else if (smallCount > bigCount) {
+                    pred = "Small";
+                } else {
+                    // Tie breaker (50/50)
+                    pred = Math.random() < 0.5 ? "Big" : "Small";
+                }
+            } else {
+                // state.currentModeName === 'BS_RANDOM'
+                // Mode 2: BS - Random (Big/Small - Random) - Used at Initial/Win (Level 1) & 3rd Loss (Level 4)
+                const bs = ["Big", "Small"];
+                pred = bs[Math.floor(Math.random() * bs.length)];
+            }
+
+            // --- START: RANDOM OPPOSITE PREDICTION LOGIC ---
+            // UPDATED: Probability is now 0.35 (35%)
+            const REVERSAL_PROBABILITY = 0.35;
+            if (Math.random() < REVERSAL_PROBABILITY) {
+                const originalPred = pred;
+                if (pred === 'Red') {
+                    pred = 'Green';
+                } else if (pred === 'Green') {
+                    pred = 'Red';
+                } else if (pred === 'Big') {
+                    pred = 'Small';
+                } else if (pred === 'Small') {
+                    pred = 'Big';
+                }
+                // Note: This logic is hidden from the user, so no UI change here.
+                // console.log(`[Hidden Reversal] Original: ${originalPred} -> Reversed: ${pred}`);
+            }
+            // --- END: RANDOM OPPOSITE PREDICTION LOGIC ---
+
+            // Update UI with prediction
+            $("prediction-pill").textContent = pred;
+            $("status").textContent = `Bet ₹${bet} on ${pred}. (Level ${state.level})`;
+            $("step-box").textContent = ''; // CLEAR STEP BOX
+
+            state.pending = {
+                period,
+                pred,
+                bet,
+                ts: Date.now(),
+                mode: state.currentModeName
+            };
+
+            periodInput.value = '';
+            $("result-input").classList.remove("hidden");
+        }
+
+        // --- Result Recording Logic ---
+        function recordResult(win) {
+            if (!state.pending) return;
+
+            const r = state.pending;
+            const modeUsed = r.mode;
+            state.pending = null;
+            $("number-prediction-log").style.display = 'none'; // Hide log after result
+
+            if (win) {
+                state.balance += r.bet;
+                state.level = 1; // Reset level on win
+                state.initialCycleBalance = state.balance; // Start new 3-level cycle with new balance
+                // **RULE: MODE STAYS THE SAME ON WIN**
+                // state.currentModeIndex remains unchanged
+                $("status").textContent = "Win recorded. Generate next prediction.";
+                appendHistory({
+                    time: new Date().toLocaleTimeString(),
+                    period: r.period,
+                    bet: r.bet,
+                    pred: r.pred,
+                    win: true
+                });
+                $("step-box").textContent = '';
+            } else {
+                state.balance -= r.bet; // Deduct loss
+                state.level += 1; // Increase level on loss
+
+                // **RULE: MODE SWITCHES ON LOSS - Cycle: 2 (BS_RANDOM) -> 0 (COLOR) -> 1 (BS_NUMBER) -> 2 (BS_RANDOM)**
+                if (state.currentModeIndex === 2) {
+                    // Current: BS_RANDOM (L1) -> Next: COLOR (L2)
+                    state.currentModeIndex = 0;
+                } else if (state.currentModeIndex === 0) {
+                    // Current: COLOR (L2) -> Next: BS_NUMBER (L3)
+                    state.currentModeIndex = 1;
+                } else if (state.currentModeIndex === 1) {
+                    // Current: BS_NUMBER (L3) -> Next: BS_RANDOM (L4 - Final Cycle)
+                    // **FIXED: This completes the cycle back to the starting mode (2)**
+                    state.currentModeIndex = 2;
+                }
+                state.currentModeName = MODE_NAMES[state.currentModeIndex];
+
+                $("status").textContent = "Loss recorded. Prepare for next bet.";
+                appendHistory({
+                    time: new Date().toLocaleTimeString(),
+                    period: r.period,
+                    bet: r.bet,
+                    pred: r.pred,
+                    win: false
+                });
+
+                // Termination check (ends after 3rd loss, which is Level 4)
+                if (state.level > 3 || state.balance <= 0) {
+                    state.balance = 0;
+                    $("status").textContent = "🔴 Max Loss Reached / Balance Zero. Session Over.";
+                    updateStats();
+                    setTimeout(() => {
+                        alert("Session over: Max Loss Reached (3 consecutive losses).");
+                        show("view-platforms");
+                    }, 800);
+                    return;
+                }
+                $("step-box").textContent = '';
+            }
+
+            updateStats();
+
+            // Check target condition
+            if (state.balance >= state.targetHigh) {
+                $("status").textContent = "🎯 Target hit!";
+                setTimeout(() => {
+                    alert("Congratulations! Your Target completed in this session.");
+                    show("view-platforms");
+                }, 800);
+            }
+        }
+
+        // --- WHEEL SPIN FUNCTIONS - IMPROVED ---
+        function createWheel() {
+            const wheel = $("wheel");
+            wheel.innerHTML = '';
+            
+            const segmentAngle = 360 / WHEEL_SEGMENTS.length;
+            
+            WHEEL_SEGMENTS.forEach((segment, index) => {
+                const segmentEl = document.createElement("div");
+                segmentEl.className = "wheel-segment";
+                segmentEl.style.backgroundColor = segment.color;
+                segmentEl.style.transform = `rotate(${index * segmentAngle}deg)`;
+                
+                // Create text element for better positioning
+                const textEl = document.createElement("div");
+                textEl.className = "segment-text";
+                textEl.textContent = segment.text;
+                textEl.style.transform = `translateY(-70px) rotate(${segmentAngle/2}deg)`;
+                textEl.style.fontSize = "20px";
+                textEl.style.fontWeight = "900";
+                textEl.style.color = "#000";
+                textEl.style.textShadow = "1px 1px 2px rgba(255, 255, 255, 0.8)";
+                
+                segmentEl.appendChild(textEl);
+                wheel.appendChild(segmentEl);
             });
         }
-    }
 
+        function spinWheel() {
+            const spinButton = $("spin-button");
+            spinButton.disabled = true;
+            
+            // Select a random discount based on probabilities
+            const randomValue = Math.random();
+            let cumulativeProbability = 0;
+            let selectedDiscount = 20; // Default fallback
+            
+            for (const discountOption of ACTUAL_DISCOUNTS) {
+                cumulativeProbability += discountOption.probability;
+                if (randomValue <= cumulativeProbability) {
+                    selectedDiscount = discountOption.discount;
+                    break;
+                }
+            }
+            
+            // Find the index of the selected discount in the wheel segments
+            const segmentIndex = WHEEL_SEGMENTS.findIndex(segment => segment.discount === selectedDiscount);
+            
+            // Calculate rotation (multiple full rotations + offset to land on selected segment)
+            const segmentAngle = 360 / WHEEL_SEGMENTS.length;
+            const fullRotations = 5; // Number of full rotations before stopping
+            const targetRotation = fullRotations * 360 + (360 - (segmentIndex * segmentAngle + segmentAngle/2));
+            
+            // Apply rotation with animation
+            const wheel = $("wheel");
+            wheel.style.transform = `rotate(${targetRotation}deg)`;
+            
+            // Show result after animation completes
+            setTimeout(() => {
+                showDiscountResult(selectedDiscount);
+                state.discount = selectedDiscount;
+                state.hasSpunWheel = true;
+                // Store in localStorage to prevent wheel from showing again
+                localStorage.setItem('wheelSpun', 'true');
+            }, 5000);
+        }
 
-    // -------- Render Platforms --------
-    const grid = $("platforms-grid");
-    PLATFORMS.forEach(name => {
-      const el = document.createElement("div");
-      el.className = "card";
-      el.innerHTML = `<h3>${name}</h3><div class="tiny">Tap to select</div> <button class="btn full" style="margin-top:8px">Choose</button>`;
-      el.querySelector("button").onclick = () => {
-        state.platform = name;
-        show("view-plans");
-      };
-      grid.appendChild(el);
-    });
+        function showDiscountResult(discount) {
+            const discountResult = $("discount-result");
+            const discountAmount = $("discount-amount");
+            const discountText = $("discount-text");
+            
+            discountAmount.textContent = `${discount}% Discount!`;
+            discountText.textContent = `Your plan prices will be reduced by ${discount}%`;
+            discountResult.style.display = 'block';
+            
+            // Update continue button
+            const continueButton = $("continue-button");
+            continueButton.onclick = function() {
+                show("view-plans");
+                renderPlansWithDiscount();
+            };
+        }
 
-    // -------- Render Plans (with Luxury Metallic Look) --------
-    const standardGrid = $("standard-plans");
-    const premiumGrid = $("premium-plans");
+        function renderPlansWithDiscount() {
+            const standardGrid = $("standard-plans");
+            const premiumGrid = $("premium-plans");
+            
+            standardGrid.innerHTML = '';
+            premiumGrid.innerHTML = '';
+            
+            PLANS.forEach(plan => {
+                // Calculate discounted price
+                const discountedPrice = Math.round(plan.price * (1 - state.discount / 100));
+                
+                let cardClass = '';
+                if (plan.price > 2000 || plan.name.includes("High")) {
+                    cardClass = 'luxury-gold';
+                } else if (plan.name.includes("Low")) {
+                    cardClass = 'refined-bronze';
+                } else if (plan.name.includes("Medium")) {
+                    cardClass = 'electric-silver';
+                }
+                
+                const el = document.createElement("div");
+                el.className = "card " + cardClass;
+                el.innerHTML = `
+                    <div class="header" style="margin-bottom:6px">
+                        <h3 style="margin-bottom:0">${plan.name}</h3>
+                        ${plan.type === 'premium' ? '<span class="tag" style="background:#5c40bc; border-color:#8470df">VIP ACCESS</span>' : ''}
+                    </div>
+                    <div class="target-highlight">₹${plan.low} - ₹${plan.high} Target Range</div>
+                    <div class="price">
+                        <span style="text-decoration: line-through; color: #ffaaaa;">₹${plan.price}</span>
+                        <span style="color: var(--action-button); font-weight: bold;"> ₹${discountedPrice}</span>
+                        <span class="tiny">One-Time Price (${state.discount}% OFF)</span>
+                    </div>
+                    <button class="btn full" style="margin-top:10px">Select Plan</button>
+                `;
+                
+                el.querySelector("button").onclick = () => setupPayment({
+                    ...plan,
+                    discountedPrice: discountedPrice,
+                    originalPrice: plan.price,
+                    discount: state.discount
+                });
+                
+                if (plan.type === 'standard') {
+                    standardGrid.appendChild(el);
+                } else {
+                    premiumGrid.appendChild(el);
+                }
+            });
+        }
 
-    PLANS.forEach(plan => {
-      let cardClass = '';
-      if (plan.price > 2000 || plan.name.includes("High")) {
-          cardClass = 'luxury-gold';
-      } else if (plan.name.includes("Low")) {
-          cardClass = 'refined-bronze';
-      } else if (plan.name.includes("Medium")) {
-          cardClass = 'electric-silver';
-      }
-      
-      const el = document.createElement("div");
-      el.className = "card " + cardClass;
-      el.innerHTML = `
-        <div class="header" style="margin-bottom:6px">
-          <h3 style="margin-bottom:0">${plan.name}</h3>
-          ${plan.type === 'premium' ? '<span class="tag" style="background:#5c40bc; border-color:#8470df">VIP ACCESS</span>' : ''}
-        </div>
-        <div class="tiny">₹${plan.low} - ₹${plan.high} Target Range</div>
-        <div class="price">₹${plan.price} <span class="tiny">One-Time Price</span></div>
-        <button class="btn full" style="margin-top:10px">Select Plan</button>
-      `;
-      el.querySelector("button").onclick = () => setupPayment(plan);
+        // --- View Navigation & Setup (Updated) ---
+        function setupPayment(plan) {
+            state.plan = plan.name;
+            state.price = plan.discountedPrice || plan.price;
+            state.targetLow = plan.low;
+            state.targetHigh = plan.high;
+            const isVIP = plan.price > 2000 || plan.name.includes("High");
+            
+            // Show VIP warning if applicable
+            if (isVIP) {
+                $("vip-warning-note").classList.remove("hidden");
+            } else {
+                $("vip-warning-note").classList.add("hidden");
+            }
+            
+            showPayment();
+        }
 
-      if (plan.type === 'standard') {
-        standardGrid.appendChild(el);
-      } else {
-        premiumGrid.appendChild(el);
-      }
-    });
-  </script>
+        function showPayment() {
+            show('view-payment');
+            $("utr").value = '';
+            $("utr").disabled = false;
+            const utr = $("utr").value.trim();
+            
+            if (state.utrListener && state.plan && utr) {
+                database.ref('payments/' + (state.plan + '-' + utr)).off('value', state.utrListener);
+                state.utrListener = null;
+            }
+            
+            document.querySelector("#view-payment .btn:not(.muted)").disabled = false;
+            $("utr-status").textContent = "Waiting for UTR...";
+            $("utr-status").style.color = "var(--muted)";
+        }
+
+        function verifyUTR() {
+            const utr = $("utr").value.trim();
+            if (utr.length !== 12 || isNaN(utr)) {
+                alert("Please enter a valid 12-digit UTR.");
+                return;
+            }
+            
+            if (!state.plan || !state.platform) {
+                alert("Platform or Plan not selected. Please go back.");
+                return;
+            }
+            
+            const utrId = state.plan + '-' + utr;
+            $("utr-status").textContent = "Submitting UTR to Admin Panel...";
+            $("utr").disabled = true;
+            document.querySelector("#view-payment .btn:not(.muted)").disabled = true;
+            
+            database.ref('payments/' + utrId).set({
+                utr: utr,
+                plan: state.plan,
+                amount: state.price,
+                originalAmount: state.originalPrice || state.price,
+                discount: state.discount || 0,
+                platform: state.platform,
+                targetLow: state.targetLow,
+                targetHigh: state.targetHigh,
+                submittedAt: new Date().toISOString(),
+                status: 'pending'
+            }).then(() => {
+                $("utr-status").textContent = "Waiting for Admin Approval...";
+                $("utr-status").style.color = "var(--warning)";
+                
+                const utrRef = database.ref('payments/' + utrId);
+                if (state.utrListener) {
+                    utrRef.off('value', state.utrListener);
+                }
+                
+                state.utrListener = utrRef.on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data && data.status === 'approved') {
+                        utrRef.off('value', state.utrListener);
+                        state.utrListener = null;
+                        $("utr-status").textContent = "Payment Approved! Starting session...";
+                        $("utr-status").style.color = "var(--clear-good)";
+                        
+                        // Session Start State Reset
+                        state.balance = data.targetLow || state.targetLow;
+                        state.initialCycleBalance = state.balance;
+                        state.targetLow = data.targetLow || state.targetLow;
+                        state.targetHigh = data.targetHigh || state.targetHigh;
+                        state.level = 1;
+                        state.pending = null;
+                        state.currentModeIndex = 2; // Start at BS_RANDOM (Index 2)
+                        
+                        updateStats();
+                        setTimeout(() => {
+                            show('view-prediction');
+                        }, 500);
+                    } else if (data && data.status === 'rejected') {
+                        utrRef.off('value', state.utrListener);
+                        state.utrListener = null;
+                        $("utr-status").textContent = "Payment Rejected. Please contact support.";
+                        $("utr-status").style.color = "var(--clear-bad)";
+                        $("utr").disabled = false;
+                        document.querySelector("#view-payment .btn:not(.muted)").disabled = false;
+                    }
+                });
+            }).catch(error => {
+                console.error("Firebase submission error:", error);
+                alert("Error submitting UTR: " + error.message);
+                $("utr-status").textContent = "Error submitting UTR. Please contact support.";
+                $("utr-status").style.color = "var(--clear-bad)";
+                $("utr").disabled = false;
+                document.querySelector("#view-payment .btn:not(.muted)").disabled = false;
+            });
+        }
+
+        // --- Admin Panel Functions (Updated) ---
+        function clearAllPayments() {
+            if (!confirm("⚠️ DANGER: Are you sure you want to delete ALL payment records from the Admin Panel (Firebase)? This action is irreversible.")) {
+                return;
+            }
+            
+            database.ref('payments').set(null).then(() => {
+                alert("All payment records cleared successfully from Firebase.");
+                renderAdminPanel({});
+            }).catch(error => {
+                alert("Error clearing data: " + error.message);
+            });
+        }
+
+        function openAdminPanel() {
+            const pass = prompt("Enter Admin Password:");
+            if (pass === ADMIN_PASSWORD) {
+                show('view-admin');
+                startAdminListener();
+            } else if (pass !== null) {
+                alert("Incorrect Password.");
+            }
+        }
+
+        function startAdminListener() {
+            if (state.adminListener) {
+                database.ref('payments').off('value', state.adminListener);
+            }
+            
+            const ref = database.ref('payments');
+            state.adminListener = ref.on('value', (snapshot) => {
+                const utrs = snapshot.val();
+                renderAdminPanel(utrs);
+            }, (error) => {
+                console.error("Firebase Admin Listener Error:", error);
+                $("pending-utrs").innerHTML = `<div class="bad">Error loading data: ${error.message}</div>`;
+            });
+        }
+
+        function renderAdminPanel(utrs) {
+            const container = $("pending-utrs");
+            container.innerHTML = '';
+            let pendingFound = false;
+            
+            for (const utrId in utrs) {
+                const data = utrs[utrId];
+                if (data && data.status === 'pending') {
+                    pendingFound = true;
+                    const row = document.createElement("div");
+                    row.className = "card";
+                    row.style.marginBottom = "10px";
+                    row.style.padding = "10px";
+                    
+                    const discountInfo = data.discount ? 
+                        `<div style="font-size:0.85rem; color:#39ff14; padding-bottom:4px;">
+                            Discount: ${data.discount}% (Original: ₹${data.originalAmount || data.amount})
+                        </div>` : '';
+                    
+                    row.innerHTML = `
+                        <div style="font-size:0.9rem; padding-bottom:4px">
+                            UTR: <span style="font-weight:bold">${data.utr}</span>
+                        </div>
+                        <div style="font-size:0.85rem; color:#cde4ff; padding-bottom:8px;">
+                            Plan: <span style="font-weight:bold">${data.plan}</span> (Target: ₹${data.targetLow || '?'} - ₹${data.targetHigh || '?'})
+                        </div>
+                        ${discountInfo}
+                        <div style="font-size:0.8rem; color:var(--muted); padding-bottom:10px;">
+                            Platform: ${data.platform} | Payment: ₹${data.amount}
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn full good" style="padding:8px" onclick="adminAction('${utrId}', 'approved')">Approve</button>
+                            <button class="btn full bad" style="padding:8px" onclick="adminAction('${utrId}', 'rejected')">Reject</button>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                }
+            }
+            
+            if (!pendingFound) {
+                container.innerHTML = '<div class="pill">No pending approvals.</div>';
+            }
+        }
+
+        function adminAction(utrId, status) {
+            if (confirm(`Are you sure you want to ${status} UTR: ${utrId}?`)) {
+                database.ref('payments/' + utrId).update({
+                    status: status,
+                    adminTime: new Date().toLocaleTimeString(),
+                    adminUser: 'Admin'
+                }).then(() => {
+                    // UI update will be handled by the listener
+                }).catch(error => {
+                    alert(`Error updating Firebase: ${error.message}`);
+                });
+            }
+        }
+
+        // -------- Initialize Wheel and Check if Already Spun --------
+        function initializeWheel() {
+            createWheel();
+            
+            // Check if user has already spun the wheel
+            const hasSpun = localStorage.getItem('wheelSpun');
+            if (hasSpun === 'true') {
+                state.hasSpunWheel = true;
+            }
+            
+            // Set up spin button
+            $("spin-button").onclick = spinWheel;
+        }
+
+        // -------- Render Platforms --------
+        const grid = $("platforms-grid");
+        PLATFORMS.forEach(name => {
+            const el = document.createElement("div");
+            el.className = "card";
+            el.innerHTML = `<h3>${name}</h3><div class="tiny">Tap to select</div>
+                            <button class="btn full" style="margin-top:8px">Choose</button>`;
+            el.querySelector("button").onclick = () => {
+                state.platform = name;
+                
+                // Show wheel if not already spun
+                if (!state.hasSpunWheel) {
+                    show("view-wheel");
+                } else {
+                    show("view-plans");
+                }
+            };
+            grid.appendChild(el);
+        });
+
+        // -------- Render Plans (Original - Without Discount) --------
+        function renderOriginalPlans() {
+            const standardGrid = $("standard-plans");
+            const premiumGrid = $("premium-plans");
+            
+            standardGrid.innerHTML = '';
+            premiumGrid.innerHTML = '';
+            
+            PLANS.forEach(plan => {
+                let cardClass = '';
+                if (plan.price > 2000 || plan.name.includes("High")) {
+                    cardClass = 'luxury-gold';
+                } else if (plan.name.includes("Low")) {
+                    cardClass = 'refined-bronze';
+                } else if (plan.name.includes("Medium")) {
+                    cardClass = 'electric-silver';
+                }
+                
+                const el = document.createElement("div");
+                el.className = "card " + cardClass;
+                el.innerHTML = `
+                    <div class="header" style="margin-bottom:6px">
+                        <h3 style="margin-bottom:0">${plan.name}</h3>
+                        ${plan.type === 'premium' ? '<span class="tag" style="background:#5c40bc; border-color:#8470df">VIP ACCESS</span>' : ''}
+                    </div>
+                    <div class="target-highlight">₹${plan.low} - ₹${plan.high} Target Range</div>
+                    <div class="price">₹${plan.price} <span class="tiny">One-Time Price</span></div>
+                    <button class="btn full" style="margin-top:10px">Select Plan</button>
+                `;
+                
+                el.querySelector("button").onclick = () => setupPayment(plan);
+                
+                if (plan.type === 'standard') {
+                    standardGrid.appendChild(el);
+                } else {
+                    premiumGrid.appendChild(el);
+                }
+            });
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeWheel();
+            renderOriginalPlans();
+        });
+    </script>
 </body>
-</html>
+</html>     
