@@ -1,5 +1,4 @@
-
-        <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -127,7 +126,18 @@
             color: #e0f2f1;
         }
         /* END METALLIC STYLES */
-
+        
+        /* FREE PLAN STYLES */
+        .card.free-plan {
+            border-color: var(--action-button);
+            background: linear-gradient(135deg, #0b2e04 0%, #031401 100%);
+        }
+        .card.free-plan h3, .card.free-plan .target-highlight {
+            color: var(--action-button);
+        }
+        .card.free-plan .price {
+            color: #fff;
+        }
         /* ADDED STYLE FOR HIGHLIGHTED TARGET RANGE */
         .target-highlight {
             font-size: var(--target-font-size);
@@ -657,8 +667,7 @@
                 <span class="tag">Step 1 of 3</span>
             </div>
             <div class="grid" id="platforms-grid">
-                <!-- Platforms will be populated by JavaScript -->
-            </div>
+                </div>
         </section>
 
         <section id="view-wheel" class="hidden">
@@ -670,8 +679,7 @@
                 <div class="wheel-container">
                     <div class="wheel-pointer"></div>
                     <div class="wheel" id="wheel">
-                        <!-- Wheel segments will be populated by JavaScript -->
-                    </div>
+                        </div>
                     <div class="wheel-center">SPIN</div>
                 </div>
                 <div class="center">
@@ -693,6 +701,8 @@
                 </div>
                 <span class="tag">Step 2 of 3</span>
             </div>
+            <div class="section-title">Free</div>
+            <div class="grid" id="free-plans"></div>
             <div class="section-title">Standard</div>
             <div class="grid" id="standard-plans"></div>
             <div class="section-title">Premium</div>
@@ -798,6 +808,21 @@
             </div>
         </section>
 
+        <div id="payment-gate-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); display: flex; align-items: center; justify-content: center; z-index: 2000;">
+            <div class="card" style="max-width: 400px; padding: 30px; text-align: center; background: var(--pred-card-bg);">
+                <h2 style="color: var(--pred-accent);">Continue Session?</h2>
+                <p style="margin: 15px 0 25px; font-size: 1.1rem; color: var(--pred-text);">
+                    Congratulations! You have reached a trigger balance of <span id="gate-trigger-balance" style="font-weight:bold; color:var(--action-button);">₹1500</span>.
+                    Do you want to continue your session towards the final target of <span id="gate-next-target" style="font-weight:bold; color:var(--pred-accent);">₹50000</span>?
+                    <br>
+                    A small payment is required to unlock the next prediction level.
+                </p>
+                <div style="display: flex; gap: 15px;">
+                    <button class="btn full bad" onclick="handleGateAction(false)" style="background:var(--clear-bad); color:#fff">NO (End Session)</button>
+                    <button class="btn full good" onclick="handleGateAction(true)" style="background:var(--action-button); color:#000">YES (Pay <span id="gate-price-display">₹149</span>)</button>
+                </div>
+            </div>
+        </div>
         <footer>&copy; 2025 Prediction Portal</footer>
     </div>
 
@@ -807,15 +832,37 @@
 
         // Initial State and Constants
         const PLATFORMS = ["TASHAN WIN", "JALWA GAME", "DM WIN"];
-        // Updated Plans (Original values kept for functionality)
+        
+        // **********************************************
+        // UPDATED PLANS: Multiple Gates for Free Plan
+        // **********************************************
         const PLANS = [
+            // NEW FREE PLAN with multiple gates
+            { 
+                name: "FREE PLAN", 
+                low: 1000, 
+                high: 50000, 
+                price: 0, 
+                type: "free", 
+                oneTime: true,
+                gates: [
+                    { trigger: 1500, price: 149, label: "Gate 1", nextTarget: 3000 },
+                    { trigger: 3000, price: 199, label: "Gate 2", nextTarget: 5000 },
+                    { trigger: 5000, price: 249, label: "Gate 3", nextTarget: 10000 },
+                    { trigger: 10000, price: 349, label: "Gate 4", nextTarget: 20000 },
+                    { trigger: 20000, price: 599, label: "Gate 5", nextTarget: 30000 },
+                    { trigger: 30000, price: 699, label: "Gate 6", nextTarget: 50000 } // Final gate before target
+                ]
+            },
+            // Existing Plans
             { name: "HIGH RISK", low: 200, high: 1000, price: 150, type: "standard" },
             { name: "Medium RISK", low: 500, high: 3000, price: 500, type: "standard" },
             { name: "LOW RISK", low: 1000, high: 5000, price: 750, type: "standard" },
             { name: "VIP 1", low: 500, high: 20000, price: 3000, type: "premium" },
             { name: "VIP 2", low: 1000, high: 30000, price: 5000, type: "premium" },
         ];
-
+        // **********************************************
+        
         const STAKE_PERCENTAGES = [0, 0.15, 0.30, 0.55];
         const ADMIN_PASSWORD = "456";
 
@@ -849,19 +896,18 @@
             targetHigh: 0,
             balance: 0,
             initialCycleBalance: 0,
-            level: 1, // 0: COLOR, 1: BS_NUMBER, 2: BS_RANDOM.
-            // Starting mode is BS_RANDOM (Index 2) as per requirement.
-            currentModeIndex: 2,
-            currentModeName: 'BS_RANDOM',
+            level: 1, // Staking level (1, 2, or 3)
             pending: null,
             utrListener: null,
             adminListener: null,
-            discount: 0, // New field to store discount percentage
-            hasSpunWheel: false // Track if user has already spun the wheel
+            discount: 0,
+            hasSpunWheel: false,
+            // NEW FREE PLAN STATE
+            isFreePlan: false,
+            gateLevel: 0, // 0: Not Free, 1: Gate 1 pending, 2: Gate 2 pending, etc.
+            currentGatePayment: 0,
+            currentGateLabel: null // NEW: Stores label (e.g., "Gate 1")
         };
-
-        // Map index to Mode Name
-        const MODE_NAMES = ['COLOR', 'BS_NUMBER', 'BS_RANDOM'];
 
         // Firebase Setup (From User Input - Replicated from previous steps)
         const firebaseConfig = {
@@ -908,6 +954,11 @@
             if (viewId !== 'view-admin' && state.adminListener) {
                 database.ref('payments').off('value', state.adminListener);
                 state.adminListener = null;
+            }
+            // If leaving prediction mode, clear state
+            if (viewId === 'view-platforms') {
+                state.isFreePlan = false;
+                state.gateLevel = 0;
             }
             show(viewId);
         }
@@ -964,7 +1015,7 @@
             $("history").prepend(row);
         }
 
-        // --- NEW PATTERN SWITCHING PREDICTION LOGIC ---
+        // --- NEW FULLY RANDOM PREDICTION LOGIC ---
         function makePrediction() {
             const periodInput = $("period");
             const period = periodInput.value.trim();
@@ -982,6 +1033,25 @@
                 alert("Maximum loss reached or balance is zero. Please end the session.");
                 return;
             }
+            
+            // **********************************************
+            // NEW: Check for Free Plan Gates
+            // **********************************************
+            if (state.isFreePlan) {
+                // Find the free plan definition (PLANS[0])
+                const freePlanDef = PLANS.find(p => p.type === 'free');
+                
+                // state.gateLevel is 1-indexed (1, 2, 3... up to 6 for the last gate)
+                const currentGateIndex = state.gateLevel - 1;
+                const currentGate = freePlanDef.gates[currentGateIndex];
+                
+                // Check if a gate exists and if the trigger has been reached
+                if (currentGate && state.balance >= currentGate.trigger) {
+                    showPaymentGate(currentGate.trigger, currentGate.nextTarget, currentGate.price, currentGate.label);
+                    return;
+                }
+            }
+            // **********************************************
 
             const betAmounts = calculateBetAmounts(state.initialCycleBalance);
             const bet = betAmounts[level];
@@ -991,48 +1061,21 @@
             }
 
             let pred;
-            state.currentModeName = MODE_NAMES[state.currentModeIndex];
+            // Full Random: 50% chance for Color, 50% chance for Big/Small
+            const predictionType = Math.random() < 0.5 ? 'COLOR' : 'BS';
 
-            if (state.currentModeName === 'COLOR') {
-                // Mode 0: COLOR (Red/Green - Random) - Used at 1st Loss (Level 2)
+            if (predictionType === 'COLOR') {
                 const colors = ["Red", "Green"];
                 pred = colors[Math.floor(Math.random() * colors.length)];
-            } else if (state.currentModeName === 'BS_NUMBER') {
-                // Mode 1: BS - Number Count (Big/Small based on 5 random numbers) - Used at 2nd Loss (Level 3)
-                let bigCount = 0;
-                let smallCount = 0;
-                let numbers = []; // Internal only, per user request (Hidden)
-
-                for (let i = 0; i < 5; i++) {
-                    const num = Math.floor(Math.random() * 10); // 0-9
-                    numbers.push(num);
-                    if (num >= 5) { // Big: 5, 6, 7, 8, 9
-                        bigCount++;
-                    } else { // Small: 0, 1, 2, 3, 4
-                        smallCount++;
-                    }
-                }
-
-                if (bigCount > smallCount) {
-                    pred = "Big";
-                } else if (smallCount > bigCount) {
-                    pred = "Small";
-                } else {
-                    // Tie breaker (50/50)
-                    pred = Math.random() < 0.5 ? "Big" : "Small";
-                }
-            } else {
-                // state.currentModeName === 'BS_RANDOM'
-                // Mode 2: BS - Random (Big/Small - Random) - Used at Initial/Win (Level 1) & 3rd Loss (Level 4)
+            } else { 
+                // BS (Big/Small)
                 const bs = ["Big", "Small"];
                 pred = bs[Math.floor(Math.random() * bs.length)];
             }
 
             // --- START: RANDOM OPPOSITE PREDICTION LOGIC ---
-            // UPDATED: Probability is now 0.35 (35%)
-            const REVERSAL_PROBABILITY = 0.35;
+            const REVERSAL_PROBABILITY = 0.35; // 35% chance
             if (Math.random() < REVERSAL_PROBABILITY) {
-                const originalPred = pred;
                 if (pred === 'Red') {
                     pred = 'Green';
                 } else if (pred === 'Green') {
@@ -1042,8 +1085,6 @@
                 } else if (pred === 'Small') {
                     pred = 'Big';
                 }
-                // Note: This logic is hidden from the user, so no UI change here.
-                // console.log(`[Hidden Reversal] Original: ${originalPred} -> Reversed: ${pred}`);
             }
             // --- END: RANDOM OPPOSITE PREDICTION LOGIC ---
 
@@ -1057,7 +1098,7 @@
                 pred,
                 bet,
                 ts: Date.now(),
-                mode: state.currentModeName
+                mode: predictionType // Store which type of prediction was made
             };
 
             periodInput.value = '';
@@ -1069,7 +1110,6 @@
             if (!state.pending) return;
 
             const r = state.pending;
-            const modeUsed = r.mode;
             state.pending = null;
             $("number-prediction-log").style.display = 'none'; // Hide log after result
 
@@ -1077,8 +1117,7 @@
                 state.balance += r.bet;
                 state.level = 1; // Reset level on win
                 state.initialCycleBalance = state.balance; // Start new 3-level cycle with new balance
-                // **RULE: MODE STAYS THE SAME ON WIN**
-                // state.currentModeIndex remains unchanged
+                
                 $("status").textContent = "Win recorded. Generate next prediction.";
                 appendHistory({
                     time: new Date().toLocaleTimeString(),
@@ -1088,24 +1127,30 @@
                     win: true
                 });
                 $("step-box").textContent = '';
+
+                // **********************************************
+                // NEW: Free Plan Gate Check on Win
+                // **********************************************
+                if (state.isFreePlan) {
+                    const freePlanDef = PLANS.find(p => p.type === 'free');
+                    // Use state.gateLevel for the next pending gate
+                    const currentGate = freePlanDef.gates[state.gateLevel - 1]; 
+
+                    // Check if the next gate exists and the trigger has been reached
+                    if (currentGate && state.balance >= currentGate.trigger) {
+                        updateStats(); 
+                        showPaymentGate(currentGate.trigger, currentGate.nextTarget, currentGate.price, currentGate.label);
+                        return;
+                    }
+                }
+                // **********************************************
+
             } else {
                 state.balance -= r.bet; // Deduct loss
                 state.level += 1; // Increase level on loss
 
-                // **RULE: MODE SWITCHES ON LOSS - Cycle: 2 (BS_RANDOM) -> 0 (COLOR) -> 1 (BS_NUMBER) -> 2 (BS_RANDOM)**
-                if (state.currentModeIndex === 2) {
-                    // Current: BS_RANDOM (L1) -> Next: COLOR (L2)
-                    state.currentModeIndex = 0;
-                } else if (state.currentModeIndex === 0) {
-                    // Current: COLOR (L2) -> Next: BS_NUMBER (L3)
-                    state.currentModeIndex = 1;
-                } else if (state.currentModeIndex === 1) {
-                    // Current: BS_NUMBER (L3) -> Next: BS_RANDOM (L4 - Final Cycle)
-                    // **FIXED: This completes the cycle back to the starting mode (2)**
-                    state.currentModeIndex = 2;
-                }
-                state.currentModeName = MODE_NAMES[state.currentModeIndex];
-
+                // **REMOVED: Mode switching logic**
+                
                 $("status").textContent = "Loss recorded. Prepare for next bet.";
                 appendHistory({
                     time: new Date().toLocaleTimeString(),
@@ -1141,6 +1186,57 @@
             }
         }
 
+        // --- NEW FREE PLAN GATE FUNCTIONS ---
+        // **********************************************
+        // UPDATED: showPaymentGate now accepts gateLabel
+        // **********************************************
+        function showPaymentGate(triggerBalance, nextTarget, price, gateLabel) {
+            // Hide prediction view and show overlay
+            document.querySelectorAll("section").forEach((section) => {
+                section.classList.add("hidden");
+            });
+            
+            $("gate-trigger-balance").textContent = `₹${triggerBalance}`;
+            // Set text based on whether it's the final gate or not
+            $("gate-next-target").textContent = nextTarget === 50000 ? `₹${nextTarget} (Final Target)` : `₹${nextTarget} (Next Check)`;
+            $("gate-price-display").textContent = `₹${price}`;
+            
+            state.currentGatePayment = price; // Store price for payment submission
+            state.currentGateLabel = gateLabel; // Store gate label
+            
+            $("payment-gate-overlay").classList.remove("hidden");
+            
+            // Disable prediction input while gate is up
+            $("period").disabled = true;
+            document.querySelector("#view-prediction button.btn:not(.muted)").disabled = true;
+        }
+
+        function handleGateAction(yes) {
+            $("payment-gate-overlay").classList.add("hidden");
+            $("period").disabled = false;
+            document.querySelector("#view-prediction button.btn:not(.muted)").disabled = false;
+            
+            if (yes) {
+                // Proceed to Payment Page (view-payment)
+                show('view-payment');
+                
+                // Update view-payment status for gate payment
+                $("utr-status").textContent = `Pay ₹${state.currentGatePayment} to unlock next prediction level (${state.currentGateLabel}).`;
+                $("utr-status").style.color = "var(--pred-accent)";
+                
+                // Set temporary plan name for UTR verification logic
+                state.plan = "FREE PLAN (" + state.currentGateLabel + ")"; // e.g., FREE PLAN (Gate 1)
+                state.price = state.currentGatePayment;
+                // Temporarily disable back button
+                document.querySelector("#view-payment .row:last-child button").disabled = true;
+
+            } else {
+                // Go back to view-platforms
+                alert("Session Ended. You chose not to unlock the next level.");
+                goBackTo('view-platforms'); // Clears state.isFreePlan, etc.
+            }
+        }
+        
         // --- WHEEL SPIN FUNCTIONS - IMPROVED ---
         function createWheel() {
             const wheel = $("wheel");
@@ -1225,26 +1321,37 @@
             };
         }
 
-        function renderPlansWithDiscount() {
-            const standardGrid = $("standard-plans");
-            const premiumGrid = $("premium-plans");
-            
-            standardGrid.innerHTML = '';
-            premiumGrid.innerHTML = '';
-            
-            PLANS.forEach(plan => {
-                // Calculate discounted price
-                const discountedPrice = Math.round(plan.price * (1 - state.discount / 100));
-                
-                let cardClass = '';
-                if (plan.price > 2000 || plan.name.includes("High")) {
-                    cardClass = 'luxury-gold';
-                } else if (plan.name.includes("Low")) {
-                    cardClass = 'refined-bronze';
-                } else if (plan.name.includes("Medium")) {
-                    cardClass = 'electric-silver';
+        function renderPlans(plans, grid, discount = 0) {
+             grid.innerHTML = '';
+             plans.forEach(plan => {
+                if (plan.type === 'free' && localStorage.getItem('hasUsedFreePlan') === 'true') {
+                    // Hide free plan if already used
+                    return;
                 }
                 
+                // Calculate discounted price
+                const finalPrice = plan.price > 0 ? Math.round(plan.price * (1 - discount / 100)) : plan.price;
+                const priceText = plan.price === 0 ? 'FREE (One Time)' : `₹${finalPrice} <span class="tiny">One-Time Price${discount > 0 ? ` (${discount}% OFF)` : ''}</span>`;
+                const isFree = plan.type === 'free';
+
+                let cardClass = isFree ? 'free-plan' : '';
+                if (!isFree) {
+                    if (plan.price > 2000 || plan.name.includes("High")) {
+                        cardClass = 'luxury-gold';
+                    } else if (plan.name.includes("Low")) {
+                        cardClass = 'refined-bronze';
+                    } else if (plan.name.includes("Medium")) {
+                        cardClass = 'electric-silver';
+                    }
+                }
+                
+                const priceHtml = discount > 0 && plan.price > 0 ? `
+                    <div class="price">
+                        <span style="text-decoration: line-through; color: #ffaaaa;">₹${plan.price}</span>
+                        <span style="color: var(--action-button); font-weight: bold;"> ₹${finalPrice}</span>
+                        <span class="tiny">One-Time Price (${discount}% OFF)</span>
+                    </div>` : `<div class="price">${priceText}</div>`;
+
                 const el = document.createElement("div");
                 el.className = "card " + cardClass;
                 el.innerHTML = `
@@ -1253,35 +1360,81 @@
                         ${plan.type === 'premium' ? '<span class="tag" style="background:#5c40bc; border-color:#8470df">VIP ACCESS</span>' : ''}
                     </div>
                     <div class="target-highlight">₹${plan.low} - ₹${plan.high} Target Range</div>
-                    <div class="price">
-                        <span style="text-decoration: line-through; color: #ffaaaa;">₹${plan.price}</span>
-                        <span style="color: var(--action-button); font-weight: bold;"> ₹${discountedPrice}</span>
-                        <span class="tiny">One-Time Price (${state.discount}% OFF)</span>
-                    </div>
+                    ${priceHtml}
                     <button class="btn full" style="margin-top:10px">Select Plan</button>
                 `;
                 
                 el.querySelector("button").onclick = () => setupPayment({
                     ...plan,
-                    discountedPrice: discountedPrice,
+                    discountedPrice: finalPrice,
                     originalPrice: plan.price,
-                    discount: state.discount
+                    discount: discount
                 });
                 
-                if (plan.type === 'standard') {
-                    standardGrid.appendChild(el);
-                } else {
-                    premiumGrid.appendChild(el);
-                }
+                grid.appendChild(el);
             });
         }
+        
+        function renderPlansWithDiscount() {
+            const freePlan = PLANS.filter(p => p.type === 'free');
+            const standardPlans = PLANS.filter(p => p.type === 'standard');
+            const premiumPlans = PLANS.filter(p => p.type === 'premium');
+            
+            renderPlans(freePlan, $("free-plans"), state.discount);
+            renderPlans(standardPlans, $("standard-plans"), state.discount);
+            renderPlans(premiumPlans, $("premium-plans"), state.discount);
+        }
+        
+        function renderOriginalPlans() {
+            const freePlan = PLANS.filter(p => p.type === 'free');
+            const standardPlans = PLANS.filter(p => p.type === 'standard');
+            const premiumPlans = PLANS.filter(p => p.type === 'premium');
+            
+            renderPlans(freePlan, $("free-plans"), 0);
+            renderPlans(standardPlans, $("standard-plans"), 0);
+            renderPlans(premiumPlans, $("premium-plans"), 0);
+        }
+        // --- End Plan Rendering ---
 
         // --- View Navigation & Setup (Updated) ---
         function setupPayment(plan) {
+            state.platform = state.platform; // Ensure platform is set from previous step
             state.plan = plan.name;
             state.price = plan.discountedPrice || plan.price;
             state.targetLow = plan.low;
             state.targetHigh = plan.high;
+            state.originalPrice = plan.originalPrice || plan.price; // Store original price for admin panel
+            state.discount = plan.discount || 0;
+            
+            // --- NEW: Handle Free Plan Start ---
+            if (plan.type === 'free') {
+                const hasUsedFreePlan = localStorage.getItem('hasUsedFreePlan');
+                if (hasUsedFreePlan === 'true' && plan.price === 0) {
+                    alert("The Free Plan can only be used once.");
+                    show('view-platforms');
+                    return;
+                }
+                
+                // Start Free Session
+                state.isFreePlan = true;
+                state.gateLevel = 1; // Start with Gate 1 pending. (1500)
+                state.currentGatePayment = plan.gates[0].price; // 149
+                state.currentGateLabel = plan.gates[0].label;
+                localStorage.setItem('hasUsedFreePlan', 'true');
+                
+                state.balance = plan.low; // Initial Balance (1000)
+                state.initialCycleBalance = state.balance;
+                state.level = 1;
+                
+                updateStats();
+                $("history").innerHTML = ''; // Clear history for new session
+                
+                show('view-prediction');
+                $("status").textContent = "Free Session Started. Generate your first prediction.";
+                return; // Exit here, skip payment page for free plan start.
+            }
+
+            // --- Paid Plan Flow ---
             const isVIP = plan.price > 2000 || plan.name.includes("High");
             
             // Show VIP warning if applicable
@@ -1298,14 +1451,15 @@
             show('view-payment');
             $("utr").value = '';
             $("utr").disabled = false;
-            const utr = $("utr").value.trim();
             
-            if (state.utrListener && state.plan && utr) {
+            if (state.utrListener && state.plan) {
+                const utr = $("utr").value.trim();
                 database.ref('payments/' + (state.plan + '-' + utr)).off('value', state.utrListener);
                 state.utrListener = null;
             }
             
             document.querySelector("#view-payment .btn:not(.muted)").disabled = false;
+            document.querySelector("#view-payment .row:last-child button").disabled = false;
             $("utr-status").textContent = "Waiting for UTR...";
             $("utr-status").style.color = "var(--muted)";
         }
@@ -1322,6 +1476,9 @@
                 return;
             }
             
+            // Check if this is a Free Plan Gate Payment
+            const isFreeGatePayment = state.isFreePlan && state.plan.includes('FREE PLAN (Gate');
+            
             const utrId = state.plan + '-' + utr;
             $("utr-status").textContent = "Submitting UTR to Admin Panel...";
             $("utr").disabled = true;
@@ -1337,7 +1494,9 @@
                 targetLow: state.targetLow,
                 targetHigh: state.targetHigh,
                 submittedAt: new Date().toISOString(),
-                status: 'pending'
+                status: 'pending',
+                isGatePayment: isFreeGatePayment,
+                gateLevel: isFreeGatePayment ? state.gateLevel : 0
             }).then(() => {
                 $("utr-status").textContent = "Waiting for Admin Approval...";
                 $("utr-status").style.color = "var(--warning)";
@@ -1352,22 +1511,43 @@
                     if (data && data.status === 'approved') {
                         utrRef.off('value', state.utrListener);
                         state.utrListener = null;
-                        $("utr-status").textContent = "Payment Approved! Starting session...";
-                        $("utr-status").style.color = "var(--clear-good)";
                         
-                        // Session Start State Reset
-                        state.balance = data.targetLow || state.targetLow;
-                        state.initialCycleBalance = state.balance;
-                        state.targetLow = data.targetLow || state.targetLow;
-                        state.targetHigh = data.targetHigh || state.targetHigh;
-                        state.level = 1;
-                        state.pending = null;
-                        state.currentModeIndex = 2; // Start at BS_RANDOM (Index 2)
-                        
-                        updateStats();
-                        setTimeout(() => {
-                            show('view-prediction');
-                        }, 500);
+                        if (data.isGatePayment) {
+                            // Free Plan Gate Approval Logic
+                            const currentGate = data.gateLevel;
+                            state.gateLevel = currentGate + 1; // Move to next gate level (e.g., 1->2, 6->7)
+                            state.plan = "FREE PLAN"; // Reset plan name
+                            
+                            $("utr-status").textContent = "Payment Approved! Continuing session...";
+                            $("utr-status").style.color = "var(--clear-good)";
+                            
+                            // Re-enable back button
+                            document.querySelector("#view-payment .row:last-child button").disabled = false;
+                            
+                            updateStats();
+                            setTimeout(() => {
+                                show('view-prediction'); // Go back to prediction
+                                $("status").textContent = `Payment for Gate ${currentGate} approved. Continue prediction.`;
+                            }, 500);
+
+                        } else {
+                            // Normal Paid Plan Approval Logic
+                            $("utr-status").textContent = "Payment Approved! Starting session...";
+                            $("utr-status").style.color = "var(--clear-good)";
+                            
+                            // Session Start State Reset
+                            state.balance = data.targetLow || state.targetLow;
+                            state.initialCycleBalance = state.balance;
+                            state.targetLow = data.targetLow || state.targetLow;
+                            state.targetHigh = data.targetHigh || state.targetHigh;
+                            state.level = 1;
+                            state.pending = null;
+                            
+                            updateStats();
+                            setTimeout(() => {
+                                show('view-prediction');
+                            }, 500);
+                        }
                     } else if (data && data.status === 'rejected') {
                         utrRef.off('value', state.utrListener);
                         state.utrListener = null;
@@ -1445,6 +1625,11 @@
                             Discount: ${data.discount}% (Original: ₹${data.originalAmount || data.amount})
                         </div>` : '';
                     
+                    const gateInfo = data.isGatePayment ?
+                        `<div style="font-size:0.85rem; color:#00eaff; padding-bottom:4px;">
+                            GATE PAYMENT: Level ${data.gateLevel} (₹${data.amount})
+                        </div>` : '';
+
                     row.innerHTML = `
                         <div style="font-size:0.9rem; padding-bottom:4px">
                             UTR: <span style="font-weight:bold">${data.utr}</span>
@@ -1453,6 +1638,7 @@
                             Plan: <span style="font-weight:bold">${data.plan}</span> (Target: ₹${data.targetLow || '?'} - ₹${data.targetHigh || '?'})
                         </div>
                         ${discountInfo}
+                        ${gateInfo}
                         <div style="font-size:0.8rem; color:var(--muted); padding-bottom:10px;">
                             Platform: ${data.platform} | Payment: ₹${data.amount}
                         </div>
@@ -1513,50 +1699,11 @@
                     show("view-wheel");
                 } else {
                     show("view-plans");
+                    renderPlansWithDiscount(); // Ensure plans are rendered with potential discount
                 }
             };
             grid.appendChild(el);
         });
-
-        // -------- Render Plans (Original - Without Discount) --------
-        function renderOriginalPlans() {
-            const standardGrid = $("standard-plans");
-            const premiumGrid = $("premium-plans");
-            
-            standardGrid.innerHTML = '';
-            premiumGrid.innerHTML = '';
-            
-            PLANS.forEach(plan => {
-                let cardClass = '';
-                if (plan.price > 2000 || plan.name.includes("High")) {
-                    cardClass = 'luxury-gold';
-                } else if (plan.name.includes("Low")) {
-                    cardClass = 'refined-bronze';
-                } else if (plan.name.includes("Medium")) {
-                    cardClass = 'electric-silver';
-                }
-                
-                const el = document.createElement("div");
-                el.className = "card " + cardClass;
-                el.innerHTML = `
-                    <div class="header" style="margin-bottom:6px">
-                        <h3 style="margin-bottom:0">${plan.name}</h3>
-                        ${plan.type === 'premium' ? '<span class="tag" style="background:#5c40bc; border-color:#8470df">VIP ACCESS</span>' : ''}
-                    </div>
-                    <div class="target-highlight">₹${plan.low} - ₹${plan.high} Target Range</div>
-                    <div class="price">₹${plan.price} <span class="tiny">One-Time Price</span></div>
-                    <button class="btn full" style="margin-top:10px">Select Plan</button>
-                `;
-                
-                el.querySelector("button").onclick = () => setupPayment(plan);
-                
-                if (plan.type === 'standard') {
-                    standardGrid.appendChild(el);
-                } else {
-                    premiumGrid.appendChild(el);
-                }
-            });
-        }
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -1565,4 +1712,4 @@
         });
     </script>
 </body>
-</html>     
+</html>
