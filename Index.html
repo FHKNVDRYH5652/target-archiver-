@@ -1,0 +1,2165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Portal | Premium</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        /* PREMIUM COLOR SCHEME: DARK NAVY/GOLD/CRIMSON */
+        :root {
+            /* Global Theme - Premium Dark Navy/Gold */
+            --bg: #0a0a14;
+            --card: #1a1a2e;
+            --muted: #6b7280;
+            --text: #f8fafc;
+            --accent: #d4af37;
+            --accent-2: #b8941f;
+            --accent-glow: rgba(212, 175, 55, 0.15);
+            
+            /* Prediction Page Theme - Premium Royal Blue/Gold */
+            --pred-bg: #0f172a;
+            --pred-card-bg: #1e293b;
+            --pred-accent: #f59e0b;
+            --pred-text: #e2e8f0;
+            --pred-glow: rgba(245, 158, 11, 0.15);
+            
+            /* Dynamic Colors for Prediction */
+            --color-red: #ef4444;
+            --color-green: #10b981;
+            --color-big: #f97316;
+            --color-small: #3b82f6;
+            --color-period: #fbbf24;
+            
+            /* Status Colors */
+            --clear-good: #10b981;
+            --clear-bad: #ef4444;
+            --warning: #f59e0b;
+            --alert-red: #dc2626;
+            
+            /* Button Colors */
+            --action-button: #d4af37;
+            --action-button-hover: #b8941f;
+            
+            /* Target Range Highlight */
+            --target-highlight-color: #fbbf24;
+            --target-font-size: 1.1rem;
+            
+            /* Wheel Colors - Premium Gold Theme */
+            --wheel-segment-1: #b45309;
+            --wheel-segment-2: #d97706;
+            --wheel-segment-3: #f59e0b;
+            --wheel-segment-4: #fbbf24;
+            --wheel-segment-5: #fcd34d;
+            --wheel-segment-6: #fde68a;
+            --wheel-segment-7: #fef3c7;
+            --wheel-segment-8: #fffbeb;
+            --wheel-segment-9: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Premium Background with subtle gradient */
+        html, body {
+            background: linear-gradient(135deg, #0a0a14 0%, #1a1a2e 50%, #0f172a 100%);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Premium Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 4px;
+        }
+
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1, h2, h3 {
+            margin: 0 0 12px;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, var(--accent) 0%, #fff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 1rem;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        /* PREMIUM CARD DESIGN */
+        .card {
+            background: var(--card);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-color: rgba(212, 175, 55, 0.3);
+        }
+
+        /* Plan Card Variations */
+        .card.luxury-gold { 
+            background: linear-gradient(135deg, #2a2100 0%, #1a1400 100%);
+            border-color: var(--accent);
+        }
+        
+        .card.refined-bronze { 
+            background: linear-gradient(135deg, #2a2418 0%, #1a160d 100%);
+            border-color: #8c7853;
+        }
+        
+        .card.electric-silver { 
+            background: linear-gradient(135deg, #2a2e33 0%, #1a1d22 100%);
+            border-color: #b0c4de;
+        }
+        
+        .card.free-plan {
+            background: linear-gradient(135deg, #1a2a1f 0%, #0f1a12 100%);
+            border-color: var(--color-green);
+        }
+        
+        .card.free-plan::before {
+            background: linear-gradient(90deg, var(--color-green), #059669);
+        }
+
+        .target-highlight {
+            font-size: var(--target-font-size);
+            font-weight: 700;
+            color: var(--target-highlight-color);
+            margin: 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .target-highlight::before {
+            content: '🎯';
+            font-size: 1.2rem;
+        }
+
+        /* PREMIUM BUTTONS */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--action-button), var(--action-button-hover));
+            color: #000;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.muted {
+            background: #374151;
+            color: var(--text);
+            box-shadow: none;
+        }
+
+        .btn.muted:hover {
+            background: #4b5563;
+        }
+
+        .btn.full {
+            width: 100%;
+        }
+
+        .btn.good {
+            background: linear-gradient(135deg, var(--clear-good), #059669);
+            color: white;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn.bad {
+            background: linear-gradient(135deg, var(--clear-bad), #dc2626);
+            color: white;
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .header {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .tag {
+            font-size: 0.85rem;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .price {
+            font-size: 1.5rem;
+            color: var(--accent);
+            margin: 16px 0;
+            font-weight: 700;
+        }
+
+        .price .tiny {
+            font-size: 0.9rem;
+            color: var(--muted);
+            font-weight: normal;
+        }
+
+        .tiny {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .section-title {
+            margin: 28px 0 16px;
+            font-size: 1.2rem;
+            color: var(--accent);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-weight: 700;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .row {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        input, select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 1rem;
+            outline: none;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .two {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .qr {
+            width: 240px;
+            height: auto;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        /* ==================================== */
+        /* PREDICTION PAGE - PREMIUM DESIGN */
+        /* ==================================== */
+        #view-prediction {
+            background: linear-gradient(135deg, var(--pred-bg) 0%, #1a1a2e 100%);
+            color: var(--pred-text);
+        }
+
+        #view-prediction .card {
+            background: var(--pred-card-bg);
+            border: 1px solid rgba(245, 158, 11, 0.15);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+
+        #view-prediction .card::before {
+            background: linear-gradient(90deg, var(--pred-accent), #f97316);
+        }
+
+        #view-prediction h1 {
+            background: linear-gradient(135deg, var(--pred-accent) 0%, #fcd34d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2rem;
+        }
+
+        #view-prediction .subtitle {
+            color: #94a3b8;
+            font-size: 1.05rem;
+        }
+
+        /* Stat Boxes */
+        .stat {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(245, 158, 11, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat:hover {
+            transform: translateY(-3px);
+            border-color: rgba(245, 158, 11, 0.3);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat .label {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .stat .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        #target-range {
+            color: var(--target-highlight-color);
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+        }
+
+        #balance {
+            color: var(--color-green);
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Live Period Display */
+        #period-display {
+            font-size: 1.8rem !important;
+            font-weight: 900;
+            color: var(--color-period);
+            background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
+            border: 2px solid #f59e0b;
+            padding: 12px 20px !important;
+            border-radius: 12px;
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+        }
+
+        /* Live Status */
+        #live-status {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--pred-text);
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            padding: 12px 20px;
+            border-radius: 12px;
+        }
+
+        /* Prediction Pill - Premium Design */
+        #prediction-pill {
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--pred-accent), #f97316);
+            color: #000;
+            padding: 20px 40px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+            font-size: 2rem !important;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 20px auto;
+            display: inline-block;
+            min-width: 200px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Staking Plan */
+        .staking-plan {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .staking-plan .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            margin: 8px 0;
+            border-radius: 12px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .staking-plan .item:hover {
+            background: rgba(30, 41, 59, 0.8);
+            transform: translateX(4px);
+        }
+
+        .staking-plan .item.current {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1));
+            border-color: var(--pred-accent);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.2);
+        }
+
+        .staking-plan .item span:first-child {
+            color: #e2e8f0;
+            font-weight: 600;
+        }
+
+        .staking-plan .item span:last-child {
+            color: var(--pred-accent);
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+
+        /* History Log */
+        .log {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(245, 158, 11, 0.1);
+            border-radius: 16px;
+            max-height: 300px;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        .log .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .log .item:hover {
+            background: rgba(255, 255, 255, 0.03);
+            padding-left: 10px;
+            padding-right: 10px;
+            margin: 0 -10px;
+            border-radius: 8px;
+        }
+
+        .log .item:last-child {
+            border-bottom: none;
+        }
+
+        .log .item span:first-child {
+            color: #cbd5e1;
+            font-size: 0.95rem;
+        }
+
+        .log .item .pred-color-R { color: var(--color-red); font-weight: 700; }
+        .log .item .pred-color-G { color: var(--color-green); font-weight: 700; }
+        .log .item .pred-bs-B { color: var(--color-big); font-weight: 700; }
+        .log .item .pred-bs-S { color: var(--color-small); font-weight: 700; }
+        .log .item .pred-half-win { color: var(--warning); font-weight: 700; }
+
+        .good {
+            color: var(--clear-good);
+            font-weight: 700;
+            background: rgba(16, 185, 129, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .bad {
+            color: var(--clear-bad);
+            font-weight: 700;
+            background: rgba(239, 68, 68, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        
+        .half-win {
+            color: var(--warning);
+            font-weight: 700;
+            background: rgba(245, 158, 11, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .pill {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Platform Pill */
+        #platform-pill {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #000;
+            font-weight: 700;
+            border: none;
+        }
+
+        footer {
+            margin-top: 50px;
+            color: #64748b;
+            text-align: center;
+            font-size: 0.85rem;
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* ==================================== */
+        /* ADMIN PANEL BUTTON - PREMIUM DESIGN */
+        /* ==================================== */
+        #admin-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000; 
+            color: #000;
+            font-weight: 900;
+            font-size: 0.8rem;
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+            transition: all 0.3s ease;
+            opacity: 1; 
+            pointer-events: auto; 
+        }
+
+        #admin-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.6);
+            opacity: 1;
+        }
+
+        /* ==================================== */
+        /* PREMIUM WHEEL DESIGN */
+        /* ==================================== */
+        #view-wheel {
+            background: linear-gradient(135deg, #0a0a14 0%, #1a1a2e 100%);
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin: 0 auto 40px;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            transition: transform 4s cubic-bezier(0.2, 0.8, 0.3, 1);
+            box-shadow: 
+                0 0 0 15px rgba(212, 175, 55, 0.3),
+                0 0 50px rgba(212, 175, 55, 0.5),
+                inset 0 0 30px rgba(0, 0, 0, 0.8);
+            border: 8px solid var(--accent);
+        }
+
+        .wheel-segment {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: bottom right;
+            left: 0;
+            top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: #000;
+            font-size: 22px;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.7);
+            overflow: hidden;
+            clip-path: polygon(0 0, 100% 0, 100% 100%);
+        }
+
+        .segment-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            transform-origin: center;
+            font-weight: 900;
+            color: #000;
+            text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.8);
+            z-index: 2;
+            font-size: 24px;
+            transform: translateY(-100px);
+        }
+
+        .wheel-center {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: #000;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.9);
+            border: 5px solid var(--accent);
+            font-size: 16px;
+        }
+
+        .wheel-pointer {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 60px;
+            background: var(--accent);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            z-index: 5;
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.8));
+            border-radius: 2px;
+        }
+
+        .spin-button {
+            margin-top: 40px;
+            padding: 18px 40px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #000;
+            border: none;
+            border-radius: 16px;
+            font-weight: 900;
+            font-size: 1.3rem;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .spin-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(212, 175, 55, 0.6);
+        }
+
+        .spin-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .discount-result {
+            margin-top: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, var(--card) 0%, #1a1a2e 100%);
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+            border: 3px solid var(--accent);
+            box-shadow: 0 20px 50px rgba(212, 175, 55, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 20px 50px rgba(212, 175, 55, 0.4); }
+            50% { box-shadow: 0 20px 60px rgba(212, 175, 55, 0.7); }
+            100% { box-shadow: 0 20px 50px rgba(212, 175, 55, 0.4); }
+        }
+
+        .discount-amount {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--accent);
+            margin: 20px 0;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.7);
+        }
+
+        .discount-text {
+            font-size: 1.2rem;
+            color: var(--text);
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .wheel-title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .wheel-title h2 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: var(--accent);
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+        }
+
+        .wheel-title .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        #vip-warning-note {
+            margin-bottom: 30px;
+            padding: 25px;
+            border: 3px solid var(--alert-red);
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.15), rgba(185, 28, 28, 0.1));
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(220, 38, 38, 0.3);
+        }
+
+        #vip-warning-note strong {
+            color: var(--alert-red);
+            font-size: 1.3rem;
+            display: block;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+        }
+
+        #vip-warning-note p {
+            color: var(--text);
+            font-size: 1.05rem;
+            margin-top: 15px;
+            line-height: 1.7;
+        }
+
+        /* Payment Gate Overlay */
+        #payment-gate-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+        }
+
+        #payment-gate-overlay .card {
+            max-width: 500px;
+            padding: 40px;
+            background: linear-gradient(135deg, var(--pred-card-bg) 0%, #1e293b 100%);
+            border: 3px solid var(--pred-accent);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+        }
+
+        #payment-gate-overlay h2 {
+            color: var(--pred-accent);
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        #payment-gate-overlay p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #cbd5e1;
+            margin-bottom: 30px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .two {
+                grid-template-columns: 1fr;
+            }
+            
+            .wheel-container {
+                width: 300px;
+                height: 300px;
+            }
+            
+            .segment-text {
+                font-size: 18px;
+                transform: translateY(-70px);
+            }
+            
+            .discount-amount {
+                font-size: 2.5rem;
+            }
+        }
+
+        /* Animation for numbers */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="admin-button" onclick="openAdminPanel()" title="Admin Panel">ADM</div>
+
+        <section id="view-platforms">
+            <div class="header">
+                <div>
+                    <h1>Premium Prediction Platform</h1>
+                    <div class="subtitle">Select your preferred gaming platform. Complete payment & UTR verification to begin your premium prediction experience.</div>
+                </div>
+                <span class="tag">Step 1 of 3</span>
+            </div>
+            <div class="grid" id="platforms-grid">
+                </div>
+        </section>
+
+        <section id="view-wheel" class="hidden">
+            <div class="card" style="max-width: 600px; margin: 0 auto;">
+                <div class="wheel-title">
+                    <h2>🎁 Premium Bonus Wheel</h2>
+                    <div class="subtitle">Spin the wheel to claim your exclusive discount. One-time offer for new sessions!</div>
+                </div>
+                <div class="wheel-container">
+                    <div class="wheel-pointer"></div>
+                    <div class="wheel" id="wheel">
+                        </div>
+                    <div class="wheel-center">SPIN</div>
+                </div>
+                <div class="center">
+                    <button class="spin-button" id="spin-button">🎰 SPIN FOR DISCOUNT</button>
+                </div>
+                <div class="discount-result" id="discount-result">
+                    <div class="discount-amount" id="discount-amount">20% DISCOUNT!</div>
+                    <div class="discount-text" id="discount-text">Your selected plan price will be reduced by this exclusive discount amount</div>
+                    <button class="btn full" style="margin-top: 20px; font-size: 1.2rem; padding: 18px;" id="continue-button">
+                        🚀 Continue to Premium Plans
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-plans" class="card hidden">
+            <div class="header">
+                <div>
+                    <h1>Select Your Premium Plan</h1>
+                    <div class="subtitle">Choose your target range and investment level. All prices are one-time for the complete session.</div>
+                </div>
+                <span class="tag">Step 2 of 3</span>
+            </div>
+            
+            <div class="section-title">🎯 Free Tier (Limited Access)</div>
+            <div class="grid" id="free-plans"></div>
+            
+            <div class="section-title">⚡ Standard Plans</div>
+            <div class="grid" id="standard-plans"></div>
+            
+            <div class="section-title">🏆 VIP Premium Plans</div>
+            <div class="grid" id="premium-plans"></div>
+            
+            <div class="row" style="margin-top: 20px;">
+                <button class="btn muted" onclick="goBackTo('view-platforms')">← Back to Platforms</button>
+            </div>
+        </section>
+
+        <section id="view-payment" class="card hidden">
+            <div class="header">
+                <div>
+                    <h1>Secure Payment Gateway</h1>
+                    <div class="subtitle">Scan the QR code using any UPI app to complete payment. Enter the 12-digit UTR reference to verify.</div>
+                </div>
+                <span class="tag">Step 3 of 3</span>
+            </div>
+            
+            <div id="vip-warning-note" class="hidden">
+                <strong>⚠️ IMPORTANT PAYMENT NOTICE ⚠️</strong>
+                <p><strong>English:</strong> For transactions above ₹2000, please use a separate device to scan the QR code. Screenshot payments may fail for larger amounts due to security restrictions.</p>
+                <p><strong>Hindi:</strong> ₹2000 से अधिक के लेनदेन के लिए, कृपया QR कोड स्कैन करने के लिए अलग डिवाइस का उपयोग करें। सुरक्षा प्रतिबंधों के कारण स्क्रीनशॉट भुगतान बड़ी रकम के लिए विफल हो सकते हैं।</p>
+            </div>
+            
+            <div class="center">
+                <img src="qr.png" class="qr" alt="Secure Payment QR Code"/>
+                <div class="tiny" style="margin-top: 15px;">Scan with Google Pay, PhonePe, Paytm, or any UPI app</div>
+            </div>
+            
+            <div class="card" style="margin-top: 30px; padding: 20px;">
+                <div class="row" style="margin: 0; align-items: center; gap: 15px;">
+                    <div style="flex-grow: 1">
+                        <label class="tiny">Enter 12-digit UTR Reference</label>
+                        <input id="utr" maxlength="12" inputmode="numeric" placeholder="e.g., 501234567890" />
+                    </div>
+                    <button class="btn" style="height: 52px; min-width: 140px;" onclick="verifyUTR()">
+                        <span>Verify UTR</span>
+                    </button>
+                </div>
+                <div id="utr-status" class="center tiny" style="margin-top: 15px; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05);">
+                    ⏳ Waiting for UTR verification...
+                </div>
+            </div>
+            
+            <div class="row" style="margin-top: 20px;">
+                <a class="btn full muted" href="https://t.me/Predict456" target="_blank" style="gap: 8px;">
+                    <span>🆘 Payment Issues? Contact Support</span>
+                </a>
+            </div>
+            
+            <div class="row" style="margin-top: 20px;">
+                <button class="btn muted" onclick="goBackTo('view-plans')">← Back to Plans</button>
+            </div>
+        </section>
+
+        <section id="view-admin" class="card hidden">
+            <h1>🔧 Admin Control Panel</h1>
+            <div class="subtitle">Manage pending UTR approvals and system configurations</div>
+            
+            <div id="admin-actions" style="margin-bottom: 25px;">
+                <button class="btn full bad" onclick="clearAllPayments()" style="padding: 15px; font-size: 1rem;">
+                    ⚠️ Clear All Payment Records (DANGER ZONE)
+                </button>
+                <div class="tiny" style="margin-top: 10px; text-align: center; color: var(--warning); padding: 10px; background: rgba(245, 158, 11, 0.1); border-radius: 8px;">
+                    This action will permanently delete ALL payment records from the database. Use only to clear outdated data.
+                </div>
+            </div>
+            
+            <div id="pending-utrs">
+                <div class="center" style="padding: 40px;">
+                    <div class="tiny">Loading payment records...</div>
+                </div>
+            </div>
+            
+            <div class="row" style="margin-top: 25px;">
+                <button class="btn muted" onclick="goBackTo('view-platforms')">← Back to Main Portal</button>
+            </div>
+        </section>
+
+        <section id="view-prediction" class="card hidden">
+            <div class="header">
+                <div>
+                    <h1>🎯 Premium Prediction Engine</h1>
+                    <div class="subtitle">Follow the automated predictions. Place bets on Color/Big/Small according to the 3-level staking plan.</div>
+                </div>
+                <span class="pill" id="platform-pill">Platform • VIP</span>
+            </div>
+            
+            <div class="two">
+                <div class="stat">
+                    <span class="label">🎯 Target Range</span>
+                    <span class="value" id="target-range">₹0 - ₹0</span>
+                </div>
+                <div class="stat">
+                    <span class="label">💰 Current Balance</span>
+                    <span class="value" id="balance">₹0</span>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-top: 24px;">
+                <div class="two">
+                    <div>
+                        <label class="tiny">📊 Live Period (Last 3 digits)</label>
+                        <div id="period-display" class="pill" style="margin-top: 10px; display: inline-block;">---</div>
+                    </div>
+                    <div>
+                        <label class="tiny">📈 Live Status</label>
+                        <div id="live-status" class="pill" style="margin-top: 10px; display: inline-block;">Waiting for data...</div>
+                    </div>
+                </div>
+                
+                <div class="center" style="margin-top: 24px;">
+                    <div class="pill" id="prediction-pill">—</div>
+                    <div id="number-prediction-log" style="display:none;"></div>
+                    <div class="tiny" id="step-box" style="margin-top: 12px; display:none;">Step: —</div>
+                    <div id="status" style="margin-top: 16px; font-weight: 600; color: var(--pred-text); padding: 15px; background: rgba(30, 41, 59, 0.5); border-radius: 12px;">
+                        ⏳ Initializing prediction engine...
+                    </div>
+                </div>
+                
+                <div class="staking-plan">
+                    <div class="section-title" style="margin: 10px 0 15px; color: var(--pred-accent);">
+                        📊 Staking Plan (Current Balance Risk Management)
+                    </div>
+                    <div id="staking-levels">
+                        </div>
+                </div>
+            </div>
+            
+            <div class="card hidden" style="margin-top: 24px;" id="result-input">
+                <div class="section-title">📝 Manual Result Recording</div>
+                <div class="two">
+                    <button class="btn full good" onclick="recordResult(true)">
+                        ✅ WIN
+                    </button>
+                    <button class="btn full bad" onclick="recordResult(false)">
+                        ❌ LOSS
+                    </button>
+                </div>
+            </div>
+            
+            <div class="section-title" style="margin-top: 30px;">📋 Session History</div>
+            <div class="log" id="history">
+                </div>
+            
+            <div class="row" style="margin-top: 24px;">
+                <button class="btn muted" onclick="endSession()">
+                    ← End Premium Session
+                </button>
+            </div>
+        </section>
+
+        <div id="payment-gate-overlay" class="hidden">
+            <div class="card">
+                <h2>🎯 Level Up Required</h2>
+                <p>
+                    Congratulations! You have reached a milestone balance of <span id="gate-trigger-balance" style="font-weight:bold; color:var(--action-button);">₹1500</span>.
+                    <br><br>
+                    Continue your session towards the next target of <span id="gate-next-target" style="font-weight:bold; color:var(--pred-accent);">₹50000</span>?
+                    <br><br>
+                    A small premium fee is required to unlock advanced predictions for the next level.
+                </p>
+                <div style="display: flex; gap: 20px; margin-top: 30px;">
+                    <button class="btn full bad" onclick="handleGateAction(false)" style="padding: 16px;">
+                        ❌ No, End Session
+                    </button>
+                    <button class="btn full good" onclick="handleGateAction(true)" style="padding: 16px;">
+                        ✅ Yes, Pay <span id="gate-price-display">₹149</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <div>© 2025 Premium Prediction Portal | All Rights Reserved</div>
+            <div style="margin-top: 10px; font-size: 0.75rem; color: #475569;">Advanced prediction technology for premium users only</div>
+        </footer>
+    </div>
+
+    <script>
+        const $ = (id) => document.getElementById(id);
+
+        // Initial State and Constants (UNCHANGED)
+        const PLATFORMS = ["TASHAN WIN", "JALWA GAME", "DM WIN"];
+        const PLANS = [
+            { 
+                name: "FREE PLAN", 
+                low: 1000, 
+                high: 50000, 
+                price: 0, 
+                type: "free", 
+                oneTime: true,
+                gates: [
+                    { trigger: 1500, price: 149, label: "Gate 1", nextTarget: 3000 },
+                    { trigger: 3000, price: 199, label: "Gate 2", nextTarget: 5000 },
+                    { trigger: 5000, price: 249, label: "Gate 3", nextTarget: 10000 },
+                    { trigger: 10000, price: 349, label: "Gate 4", nextTarget: 20000 },
+                    { trigger: 20000, price: 599, label: "Gate 5", nextTarget: 30000 },
+                    { trigger: 30000, price: 699, label: "Gate 6", nextTarget: 50000 }
+                ]
+            },
+            { name: "HIGH RISK", low: 200, high: 1000, price: 150, type: "standard" },
+            { name: "Medium RISK", low: 500, high: 3000, price: 500, type: "standard" },
+            { name: "LOW RISK", low: 1000, high: 5000, price: 750, type: "standard" },
+            { name: "VIP 1", low: 500, high: 20000, price: 3000, type: "premium" },
+            { name: "VIP 2", low: 1000, high: 30000, price: 5000, type: "premium" },
+        ];
+        
+        const STAKE_PERCENTAGES = [0, 0.15, 0.30, 0.55];
+        const ADMIN_PASSWORD = "456";
+        const ACTUAL_DISCOUNTS = [
+            { discount: 20, probability: 0.3 },  
+            { discount: 30, probability: 0.3 },  
+            { discount: 40, probability: 0.3 },  
+            { discount: 50, probability: 0.05 }, 
+            { discount: 60, probability: 0.05 }  
+        ];
+        const API_URL = 'https://harshpredictor.site/api/api.php';
+        const API_POLL_INTERVAL = 1500;
+        const MAX_SEQUENCE_LENGTH = 5; // Maximum limit for sequence
+
+        let state = {
+            platform: null,
+            plan: null,
+            price: 0,
+            targetLow: 0,
+            targetHigh: 0,
+            balance: 0,
+            initialCycleBalance: 0,
+            level: 1, 
+            pending: null,
+            utrListener: null,
+            adminListener: null,
+            discount: 0,
+            hasSpunWheel: false,
+            isFreePlan: false,
+            gateLevel: 0, 
+            currentGatePayment: 0,
+            currentGateLabel: null, 
+            sessionActive: false,
+            sessionPausedForGate: false,
+            
+            // NEW STATE FOR RANDOM SEQUENCE LOGIC
+            currentMode: null, // 'COLOR' or 'BS'
+            sequenceLength: 0, // Total length of the current sequence (1 to 5)
+            sequenceRemaining: 0 // How many predictions are left in the current sequence
+        };
+
+        let lastProcessedIssue = null; 
+        
+        // Firebase Setup (UNCHANGED)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBs7eQyMrcN8kJWMHl2ac2UZlYQ6DypD8",
+            authDomain: "terminal-xxrr.firebaseapp.com",
+            databaseURL: "https://terminal-xxrr-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "terminal-xxrr",
+            storageBucket: "terminal-xxrr.firebasestorage.app",
+            messagingSenderId: "722753278120",
+            appId: "1:722753278120:web:bfa37aab39635a4e57f29d",
+            measurementId: "G-E3MZH3E1K5"
+        };
+        
+        let app, database;
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            database = app.database();
+        } catch (error) {
+            if (!/already exists/.test(error.message)) {
+                console.error('Firebase initialization error', error.stack);
+            }
+            app = firebase.app();
+            database = app.database();
+        }
+
+        // Core Functions
+        function endSession() {
+            sessionStorage.removeItem('history');
+            goBackTo('view-platforms');
+        }
+
+        function show(viewId) {
+            document.querySelectorAll("section").forEach((section) => {
+                section.classList.add("hidden");
+            });
+            $(viewId).classList.remove("hidden");
+        }
+
+        function goBackTo(viewId) {
+            if (state.utrListener) {
+                const utr = $("utr").value.trim();
+                if (utr && state.plan) {
+                    database.ref('payments/' + (state.plan + '-' + utr)).off('value', state.utrListener);
+                }
+                state.utrListener = null;
+            }
+            if (viewId !== 'view-admin' && state.adminListener) {
+                database.ref('payments').off('value', state.adminListener);
+                state.adminListener = null;
+            }
+            if (viewId === 'view-platforms') {
+                state.isFreePlan = false;
+                state.gateLevel = 0;
+                state.sessionActive = false;
+                state.sessionPausedForGate = false;
+                state.pending = null;
+                lastProcessedIssue = null; 
+                sessionStorage.removeItem('history');
+                // Reset random prediction state
+                state.currentMode = null; 
+                state.sequenceLength = 0; 
+                state.sequenceRemaining = 0; 
+            }
+            show(viewId);
+        }
+
+        function calculateBetAmounts(baseBalance) {
+            const L1_PERCENT = STAKE_PERCENTAGES[1];
+            const L2_PERCENT = STAKE_PERCENTAGES[2];
+            const bet1 = Math.round(baseBalance * L1_PERCENT);
+            const bet2 = Math.round(baseBalance * L2_PERCENT);
+            const bet3 = baseBalance - bet1 - bet2;
+            return [0, bet1, bet2, bet3];
+        }
+
+        function renderBettingLevels() {
+            const container = $("staking-levels");
+            container.innerHTML = '';
+            const currentLevel = state.level;
+            const betAmounts = calculateBetAmounts(state.initialCycleBalance);
+
+            if (currentLevel > 3 || state.initialCycleBalance <= 0) {
+                container.innerHTML = `<div class="item" style="color:var(--clear-bad); justify-content:center;">Session Over: Max Loss Reached or Balance Zero.</div>`;
+                return;
+            }
+
+            for (let level = 1; level <= 3; level++) {
+                const betAmount = betAmounts[level];
+                const item = document.createElement("div");
+                item.className = "item" + (level === currentLevel ? " current" : "");
+                item.innerHTML = `
+                    <span>Level ${level} ${level === currentLevel ? '(NEXT BET)' : ''} (Risk ${STAKE_PERCENTAGES[level] * 100}%)</span>
+                    <span>₹${betAmount}</span>
+                `;
+                container.appendChild(item);
+            }
+        }
+
+        function updateStats() {
+            $("balance").textContent = `₹${state.balance}`;
+            $("target-range").textContent = `₹${state.targetLow} - ₹${state.targetHigh}`;
+            renderBettingLevels();
+            if (state.platform && state.plan) {
+                $("platform-pill").textContent = state.platform + ' • ' + state.plan.split('(')[0].trim();
+            }
+        }
+
+        function formatPrediction(pred) {
+            if (pred === 'Red') return `<span class="pred-color-R">${pred}</span>`;
+            if (pred === 'Green') return `<span class="pred-color-G">${pred}</span>`;
+            if (pred === 'Big') return `<span class="pred-bs-B">${pred}</span>`;
+            if (pred === 'Small') return `<span class="pred-bs-S">${pred}</span>`;
+            return pred;
+        }
+
+        function appendHistory(item) {
+            const log = $("history");
+            const row = document.createElement("div");
+            row.className = "item fade-in";
+            const resultText = item.actualNumber !== undefined ? ` • Result ${item.actualNumber}` : '';
+            
+            const predHtml = formatPrediction(item.pred);
+            
+            let winStatusClass;
+            let winStatusText;
+            
+            if (item.win === true) {
+                winStatusClass = 'good';
+                winStatusText = 'WIN';
+            } else if (item.win === 'half') {
+                winStatusClass = 'half-win';
+                winStatusText = 'HALF WIN';
+            } else {
+                winStatusClass = 'bad';
+                winStatusText = 'LOSS';
+            }
+
+
+            row.innerHTML = `<span>${item.time} • Period ${item.period} • Bet ₹${item.bet} • ${predHtml}${resultText}</span>
+                             <span class="${winStatusClass}">${winStatusText}</span>`;
+            log.prepend(row);
+            
+            const currentHistory = JSON.parse(sessionStorage.getItem('history') || '[]');
+            currentHistory.unshift(item);
+            sessionStorage.setItem('history', JSON.stringify(currentHistory));
+        }
+        
+        function loadHistory() {
+            const history = JSON.parse(sessionStorage.getItem('history') || '[]');
+            const log = $("history");
+            log.innerHTML = '';
+            history.forEach(item => {
+                const row = document.createElement("div");
+                row.className = "item";
+                const resultText = item.actualNumber !== undefined ? ` • Result ${item.actualNumber}` : '';
+                const predHtml = formatPrediction(item.pred);
+                
+                let winStatusClass;
+                let winStatusText;
+                
+                if (item.win === true) {
+                    winStatusClass = 'good';
+                    winStatusText = 'WIN';
+                } else if (item.win === 'half') {
+                    winStatusClass = 'half-win';
+                    winStatusText = 'HALF WIN';
+                } else {
+                    winStatusClass = 'bad';
+                    winStatusText = 'LOSS';
+                }
+
+                row.innerHTML = `<span>${item.time} • Period ${item.period} • Bet ₹${item.bet} • ${predHtml}${resultText}</span>
+                                 <span class="${winStatusClass}">${winStatusText}</span>`;
+                log.appendChild(row);
+            });
+            while (log.firstChild) {
+                log.appendChild(log.removeChild(log.firstChild));
+            }
+        }
+
+        function getColorFromNumber(num) {
+            num = parseInt(num, 10);
+            if (isNaN(num)) return null;
+            // 0 is Red (Violet), 5 is Green (Violet), others depend on parity
+            if (num % 2 === 0) return 'Red';
+            else return 'Green';
+        }
+
+        // AUTO PREDICTION ENGINE (UPDATED FOR SEQUENCE RANDOMIZATION)
+        function makeAutoPrediction(nextIssueNumber) {
+            if(state.pending && state.pending.fullIssueNumber === nextIssueNumber) {
+                return;
+            }
+
+            const level = state.level;
+            const betAmounts = calculateBetAmounts(state.initialCycleBalance);
+            const bet = betAmounts[level];
+
+            if (level > 3 || state.balance <= 0 || bet <= 0) {
+                $("status").textContent = "Maximum loss reached or balance zero. Session over.";
+                return;
+            }
+
+            // 1. Check if the current prediction sequence is finished or needs initialization
+            if (state.sequenceRemaining <= 0) {
+                // Determine Mode: Randomly choose COLOR or BS
+                state.currentMode = Math.random() < 0.5 ? 'COLOR' : 'BS';
+                
+                // Determine Sequence Length: Randomly choose 1 to 5
+                state.sequenceLength = Math.floor(Math.random() * MAX_SEQUENCE_LENGTH) + 1;
+                state.sequenceRemaining = state.sequenceLength;
+            }
+
+            const predictionType = state.currentMode;
+            
+            // 2. Choose the specific prediction (Red/Green or Big/Small) - FULLY RANDOM
+            let pred;
+            if (predictionType === 'COLOR') {
+                const colors = ["Red", "Green"];
+                pred = colors[Math.floor(Math.random() * colors.length)];
+            } else {
+                const bs = ["Big", "Small"];
+                pred = bs[Math.floor(Math.random() * bs.length)];
+            }
+
+            // 3. Apply a small random reversal for unpredictability (35% probability)
+            const REVERSAL_PROBABILITY = 0.35;
+            if (Math.random() < REVERSAL_PROBABILITY) {
+                if (pred === 'Red') pred = 'Green';
+                else if (pred === 'Green') pred = 'Red';
+                else if (pred === 'Big') pred = 'Small';
+                else if (pred === 'Small') pred = 'Big';
+            }
+
+            const periodShort = nextIssueNumber.slice(-3);
+            const predHtml = formatPrediction(pred);
+
+            // Display current sequence status
+            $("prediction-pill").innerHTML = predHtml;
+            $("status").textContent = `Next Period #${periodShort} → Bet ₹${bet} on ${pred}. (Lvl ${state.level} | Mode: ${predictionType} | Seq Left: ${state.sequenceRemaining})`;
+
+            $("live-status").textContent = `Prediction ready for #${periodShort}`;
+
+            // Decrement remaining count after making the prediction
+            state.sequenceRemaining--;
+
+            state.pending = {
+                period: periodShort,
+                fullIssueNumber: nextIssueNumber,
+                pred,
+                bet,
+                ts: Date.now(),
+                mode: predictionType
+            };
+        }
+
+        function recordResult(winType, actualNumber) {
+            if (!state.pending || !state.sessionActive) return;
+
+            const r = state.pending;
+            state.pending = null; 
+            
+            let winAmount = 0;
+            let isWin = false;
+
+            if (winType === true) {
+                // Full Win (100 -> 200, so win is 100)
+                winAmount = r.bet;
+                isWin = true;
+            } else if (winType === 'half') {
+                // Half Win (100 -> 150, so win is 50)
+                winAmount = Math.round(r.bet / 2);
+                isWin = true;
+            } 
+            // If winType is false, winAmount is 0 (Full Loss)
+
+            if (isWin) {
+                state.balance += winAmount;
+                state.level = 1;
+                state.initialCycleBalance = state.balance;
+
+                $("status").textContent = `${winType === 'half' ? '🟡 HALF WIN' : '✅ WIN'}! Period #${r.period}. Level reset to 1. Balance gained: ₹${winAmount}`;
+                
+                appendHistory({
+                    time: new Date().toLocaleTimeString(),
+                    period: r.period,
+                    bet: r.bet,
+                    pred: r.pred,
+                    win: winType,
+                    actualNumber: actualNumber
+                });
+
+                if (state.isFreePlan && !state.sessionPausedForGate) {
+                    const freePlanDef = PLANS.find(p => p.type === 'free');
+                    const currentGate = freePlanDef.gates[state.gateLevel - 1];
+                    if (currentGate && state.balance >= currentGate.trigger) {
+                        updateStats();
+                        showPaymentGate(currentGate.trigger, currentGate.nextTarget, currentGate.price, currentGate.label);
+                        return;
+                    }
+                }
+
+            } else {
+                // Full Loss
+                state.balance -= r.bet;
+                state.level += 1;
+
+                $("status").textContent = `❌ LOSS! Period #${r.period}. Level increased to ${state.level}. Lost: ₹${r.bet}`;
+                appendHistory({
+                    time: new Date().toLocaleTimeString(),
+                    period: r.period,
+                    bet: r.bet,
+                    pred: r.pred,
+                    win: false,
+                    actualNumber: actualNumber
+                });
+
+                if (state.level > 3 || state.balance <= 0) {
+                    state.balance = 0;
+                    $("status").textContent = "🔴 Max Loss Reached / Balance Zero. Session Over.";
+                    updateStats();
+                    setTimeout(() => {
+                        alert("Session over: Max Loss Reached (3 consecutive losses) or Balance Zero.");
+                        endSession(); 
+                    }, 800);
+                    return;
+                }
+            }
+
+            updateStats();
+
+            if (state.balance >= state.targetHigh) {
+                $("status").textContent = "🎯 Target hit! Session ending.";
+                setTimeout(() => {
+                    alert("Congratulations! Your Target completed in this session.");
+                    endSession(); 
+                }, 800);
+            }
+        }
+
+        async function fetchDataAndUpdate() {
+            if (!state.sessionActive && !document.querySelector('#view-prediction').classList.contains('hidden')) {
+                $("live-status").textContent = "Session inactive.";
+            }
+
+            try {
+                const response = await fetch(`${API_URL}?v=${new Date().getTime()}`);
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                const data = await response.json();
+                const list = data && data.data && data.data.list ? data.data.list : null;
+                
+                if (list && list.length > 0) {
+                    processApiData(list);
+                }
+            } catch (error) {
+                console.error("Data fetch failed:", error);
+                if (state.sessionActive) {
+                    $("live-status").textContent = "API Error / Network Issue";
+                }
+                $("period-display").textContent = "---";
+            }
+        }
+
+        function processApiData(apiResults) {
+            const latestResult = apiResults[0];
+            if (!latestResult) return;
+
+            const currentIssueNumber = latestResult.issueNumber;
+            const nextIssueNumber = (BigInt(currentIssueNumber) + 1n).toString();
+            const nextPeriodShort = nextIssueNumber.slice(-3);
+
+            const hasNewResultArrived = currentIssueNumber !== lastProcessedIssue;
+            
+            if (state.sessionActive && hasNewResultArrived) {
+                const match = apiResults.find(r => r.issueNumber === state.pending?.fullIssueNumber);
+                
+                if (match) {
+                    const num = parseInt(match.number, 10);
+                    let winType = false; // Default to Loss
+                    
+                    if (state.pending.mode === 'BS') {
+                        const actualBS = num >= 5 ? 'Big' : 'Small';
+                        winType = (actualBS.toLowerCase() === state.pending.pred.toLowerCase());
+                    } else if (state.pending.mode === 'COLOR') {
+                        const actualColor = getColorFromNumber(num);
+                        const predictedColor = state.pending.pred;
+                        
+                        if (actualColor) {
+                            if (actualColor.toLowerCase() === predictedColor.toLowerCase()) {
+                                // Half Win logic: Red predicted + 0 result OR Green predicted + 5 result
+                                if ((predictedColor === 'Red' && num === 0) || (predictedColor === 'Green' && num === 5)) {
+                                    winType = 'half'; 
+                                } else {
+                                    winType = true; // Full Win
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (!state.sessionPausedForGate) {
+                         recordResult(winType, num);
+                    } else {
+                        state.pending = null; 
+                        $("live-status").textContent = `Result #${match.issueNumber.slice(-3)} received. Waiting for Gate payment.`;
+                        $("prediction-pill").textContent = 'PAUSED';
+                    }
+                    
+                    lastProcessedIssue = currentIssueNumber;
+                }
+            }
+            
+            if (!hasNewResultArrived && lastProcessedIssue) {
+                 $("period-display").textContent = nextPeriodShort;
+                 
+                 if (state.sessionActive && state.pending) {
+                     $("live-status").textContent = `Prediction ready for #${state.pending.period}`;
+                 }
+                 return;
+            }
+
+            lastProcessedIssue = currentIssueNumber;
+            $("period-display").textContent = nextPeriodShort;
+
+            if (state.sessionActive && 
+                !state.sessionPausedForGate && 
+                state.balance > 0 && 
+                state.level <= 3) 
+            {
+                const isPredictionNeeded = !state.pending || (state.pending.fullIssueNumber !== nextIssueNumber);
+
+                if (isPredictionNeeded) {
+                    makeAutoPrediction(nextIssueNumber);
+                } else {
+                     $("live-status").textContent = `Prediction ready for #${state.pending.period}`;
+                }
+            } 
+            else if (state.sessionActive && state.sessionPausedForGate) {
+                $("live-status").textContent = `PAUSED: Gate Check #${nextPeriodShort}`;
+                $("prediction-pill").textContent = 'PAUSED';
+            } else if (!state.sessionActive && document.querySelector('#view-prediction')?.classList.contains('hidden')) {
+                 // Do nothing
+            } else {
+                 $("live-status").textContent = `Latest Result: ${latestResult.number}`;
+                 $("prediction-pill").textContent = '—';
+            }
+        }
+        
+        function startLiveEngine() {
+            fetchDataAndUpdate();
+            setInterval(fetchDataAndUpdate, API_POLL_INTERVAL); 
+        }
+
+        // WHEEL FUNCTIONS (UNCHANGED LOGIC, ONLY DESIGN)
+        function createWheel() {
+            const wheel = $("wheel");
+            wheel.innerHTML = '';
+            
+            const segmentAngle = 360 / WHEEL_SEGMENTS.length;
+            
+            WHEEL_SEGMENTS.forEach((segment, index) => {
+                const segmentEl = document.createElement("div");
+                segmentEl.className = "wheel-segment";
+                segmentEl.style.backgroundColor = segment.color;
+                segmentEl.style.transform = `rotate(${index * segmentAngle}deg)`;
+                
+                const textEl = document.createElement("div");
+                textEl.className = "segment-text";
+                textEl.textContent = segment.text;
+                textEl.style.transform = `translateY(-100px) rotate(${segmentAngle/2}deg)`;
+                
+                segmentEl.appendChild(textEl);
+                wheel.appendChild(segmentEl);
+            });
+        }
+
+        function spinWheel() {
+            const spinButton = $("spin-button");
+            spinButton.disabled = true;
+            
+            const randomValue = Math.random();
+            let cumulativeProbability = 0;
+            let selectedDiscount = 20;
+            
+            for (const discountOption of ACTUAL_DISCOUNTS) {
+                cumulativeProbability += discountOption.probability;
+                if (randomValue <= cumulativeProbability) {
+                    selectedDiscount = discountOption.discount;
+                    break;
+                }
+            }
+            
+            const segmentIndex = WHEEL_SEGMENTS.findIndex(segment => segment.discount === selectedDiscount);
+            
+            const segmentAngle = 360 / WHEEL_SEGMENTS.length;
+            const fullRotations = 5;
+            const targetRotation = fullRotations * 360 + (360 - (segmentIndex * segmentAngle + segmentAngle/2));
+            
+            const wheel = $("wheel");
+            wheel.style.transform = `rotate(${targetRotation}deg)`;
+            
+            setTimeout(() => {
+                showDiscountResult(selectedDiscount);
+                state.discount = selectedDiscount;
+                state.hasSpunWheel = true;
+                localStorage.setItem('wheelSpun', 'true');
+            }, 5000);
+        }
+
+        function showDiscountResult(discount) {
+            const discountResult = $("discount-result");
+            const discountAmount = $("discount-amount");
+            const discountText = $("discount-text");
+            
+            discountAmount.textContent = `${discount}% Discount!`;
+            discountText.textContent = `Your plan prices will be reduced by ${discount}%`;
+            discountResult.style.display = 'block';
+            
+            const continueButton = $("continue-button");
+            continueButton.onclick = function() {
+                show("view-plans");
+                renderPlansWithDiscount();
+            };
+        }
+
+        function initializeWheel() {
+            createWheel();
+            const hasSpun = localStorage.getItem('wheelSpun');
+            if (hasSpun === 'true') {
+                state.hasSpunWheel = true;
+            }
+            $("spin-button").onclick = spinWheel;
+        }
+
+        // PAYMENT/PLAN FUNCTIONS (UNCHANGED LOGIC)
+        function renderPlans(plans, grid, discount = 0) {
+            grid.innerHTML = '';
+            plans.forEach(plan => {
+                if (plan.type === 'free' && localStorage.getItem('hasUsedFreePlan') === 'true') {
+                    return;
+                }
+                
+                const finalPrice = plan.price > 0 ? Math.round(plan.price * (1 - discount / 100)) : plan.price;
+                const priceText = plan.price === 0 ? 'FREE (One Time)' : `₹${finalPrice} <span class="tiny">One-Time Price${discount > 0 ? ` (${discount}% OFF)` : ''}</span>`;
+                const isFree = plan.type === 'free';
+
+                let cardClass = isFree ? 'free-plan' : '';
+                if (!isFree) {
+                    if (plan.price > 2000 || plan.name.includes("High")) {
+                        cardClass = 'luxury-gold';
+                    } else if (plan.name.includes("Low")) {
+                        cardClass = 'refined-bronze';
+                    } else if (plan.name.includes("Medium")) {
+                        cardClass = 'electric-silver';
+                    }
+                }
+                
+                const priceHtml = discount > 0 && plan.price > 0 ? `
+                    <div class="price">
+                        <span style="text-decoration: line-through; color: #94a3b8; margin-right: 10px;">₹${plan.price}</span>
+                        <span style="color: var(--action-button); font-weight: bold;">₹${finalPrice}</span>
+                        <div class="tiny">One-Time Price (${discount}% OFF)</div>
+                    </div>` : `<div class="price">${priceText}</div>`;
+
+                const el = document.createElement("div");
+                el.className = "card " + cardClass;
+                el.innerHTML = `
+                    <div class="header" style="margin-bottom:10px">
+                        <h3 style="margin-bottom:0">${plan.name}</h3>
+                        ${plan.type === 'premium' ? '<span class="tag" style="background:rgba(212, 175, 55, 0.2); border-color:rgba(212, 175, 55, 0.4)">VIP ACCESS</span>' : ''}
+                    </div>
+                    <div class="target-highlight">₹${plan.low} - ₹${plan.high}</div>
+                    ${priceHtml}
+                    <button class="btn full" style="margin-top:15px">Select Plan</button>
+                `;
+                
+                el.querySelector("button").onclick = () => setupPayment({
+                    ...plan,
+                    discountedPrice: finalPrice,
+                    originalPrice: plan.price,
+                    discount: discount
+                });
+                
+                grid.appendChild(el);
+            });
+        }
+        
+        function renderPlansWithDiscount() {
+            const freePlan = PLANS.filter(p => p.type === 'free');
+            const standardPlans = PLANS.filter(p => p.type === 'standard');
+            const premiumPlans = PLANS.filter(p => p.type === 'premium');
+            
+            renderPlans(freePlan, $("free-plans"), state.discount);
+            renderPlans(standardPlans, $("standard-plans"), state.discount);
+            renderPlans(premiumPlans, $("premium-plans"), state.discount);
+        }
+        
+        function renderOriginalPlans() {
+            const freePlan = PLANS.filter(p => p.type === 'free');
+            const standardPlans = PLANS.filter(p => p.type === 'standard');
+            const premiumPlans = PLANS.filter(p => p.type === 'premium');
+            
+            renderPlans(freePlan, $("free-plans"), 0);
+            renderPlans(standardPlans, $("standard-plans"), 0);
+            renderPlans(premiumPlans, $("premium-plans"), 0);
+        }
+        
+        function setupPayment(plan) {
+            state.platform = state.platform;
+            state.plan = plan.name;
+            state.price = plan.discountedPrice || plan.price;
+            state.targetLow = plan.low;
+            state.targetHigh = plan.high;
+            state.originalPrice = plan.originalPrice || plan.price;
+            state.discount = plan.discount || 0;
+            
+            if (plan.type === 'free') {
+                const hasUsedFreePlan = localStorage.getItem('hasUsedFreePlan');
+                if (hasUsedFreePlan === 'true' && plan.price === 0) {
+                    alert("The Free Plan can only be used once.");
+                    show('view-platforms');
+                    return;
+                }
+                
+                state.isFreePlan = true;
+                state.gateLevel = 1;
+                state.currentGatePayment = plan.gates[0].price;
+                state.currentGateLabel = plan.gates[0].label;
+                localStorage.setItem('hasUsedFreePlan', 'true');
+                
+                state.balance = plan.low;
+                state.initialCycleBalance = state.balance;
+                state.level = 1;
+                state.pending = null;
+                state.sessionActive = true;
+                state.sessionPausedForGate = false;
+                
+                // Reset sequence state when starting a new session
+                state.currentMode = null; 
+                state.sequenceLength = 0; 
+                state.sequenceRemaining = 0; 
+                
+                updateStats();
+                $("history").innerHTML = '';
+                
+                show('view-prediction');
+                $("status").textContent = "Free Session Started. Auto prediction will begin from next period.";
+                return;
+            }
+
+            const isVIP = plan.price > 2000 || plan.name.includes("High");
+            
+            if (isVIP) {
+                $("vip-warning-note").classList.remove("hidden");
+            } else {
+                $("vip-warning-note").classList.add("hidden");
+            }
+            
+            showPayment();
+        }
+
+        function showPayment() {
+            show('view-payment');
+            $("utr").value = '';
+            $("utr").disabled = false;
+            
+            if (state.utrListener && state.plan) {
+                const utr = $("utr").value.trim();
+                database.ref('payments/' + (state.plan + '-' + utr)).off('value', state.utrListener);
+                state.utrListener = null;
+            }
+            
+            document.querySelector("#view-payment .btn:not(.muted)").disabled = false;
+            document.querySelector("#view-payment .row:last-child button").disabled = false;
+            $("utr-status").textContent = "Waiting for UTR verification...";
+            $("utr-status").style.color = "var(--muted)";
+        }
+
+        function verifyUTR() {
+            const utr = $("utr").value.trim();
+            if (utr.length !== 12 || isNaN(utr)) {
+                alert("Please enter a valid 12-digit UTR.");
+                return;
+            }
+            
+            if (!state.plan || !state.platform) {
+                alert("Platform or Plan not selected. Please go back.");
+                return;
+            }
+            
+            const isFreeGatePayment = state.isFreePlan && state.plan.includes('FREE PLAN (Gate');
+            
+            const utrId = state.plan + '-' + utr;
+            $("utr-status").textContent = "Submitting UTR to Admin Panel...";
+            $("utr").disabled = true;
+            document.querySelector("#view-payment .btn:not(.muted)").disabled = true;
+            
+            database.ref('payments/' + utrId).set({
+                utr: utr,
+                plan: state.plan,
+                amount: state.price,
+                originalAmount: state.originalPrice || state.price,
+                discount: state.discount || 0,
+                platform: state.platform,
+                targetLow: state.targetLow,
+                targetHigh: state.targetHigh,
+                submittedAt: new Date().toISOString(),
+                status: 'pending',
+                isGatePayment: isFreeGatePayment,
+                gateLevel: isFreeGatePayment ? state.gateLevel : 0
+            }).then(() => {
+                $("utr-status").textContent = "Waiting for Admin Approval...";
+                $("utr-status").style.color = "var(--warning)";
+                
+                const utrRef = database.ref('payments/' + utrId);
+                if (state.utrListener) {
+                    utrRef.off('value', state.utrListener);
+                }
+                
+                state.utrListener = utrRef.on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data && data.status === 'approved') {
+                        utrRef.off('value', state.utrListener);
+                        state.utrListener = null;
+                        
+                        if (data.isGatePayment) {
+                            const currentGate = data.gateLevel;
+                            state.gateLevel = currentGate + 1;
+                            state.plan = "FREE PLAN";
+                            
+                            $("utr-status").textContent = "Payment Approved! Continuing session...";
+                            $("utr-status").style.color = "var(--clear-good)";
+                            
+                            document.querySelector("#view-payment .row:last-child button").disabled = false;
+                            
+                            state.sessionPausedForGate = false;
+                            state.sessionActive = true;
+
+                            updateStats();
+                            setTimeout(() => {
+                                show('view-prediction');
+                                $("status").textContent = `Payment for Gate ${currentGate} approved. Auto predictions will continue.`;
+                            }, 500);
+
+                        } else {
+                            $("utr-status").textContent = "Payment Approved! Starting session...";
+                            $("utr-status").style.color = "var(--clear-good)";
+                            
+                            state.balance = data.targetLow || state.targetLow;
+                            state.initialCycleBalance = state.balance;
+                            state.targetLow = data.targetLow || state.targetLow;
+                            state.targetHigh = data.targetHigh || state.targetHigh;
+                            state.level = 1;
+                            state.pending = null;
+                            state.sessionActive = true;
+                            state.sessionPausedForGate = false;
+                            
+                            // Reset sequence state when starting a new paid session
+                            state.currentMode = null; 
+                            state.sequenceLength = 0; 
+                            state.sequenceRemaining = 0; 
+                            
+                            updateStats();
+                            setTimeout(() => {
+                                show('view-prediction');
+                                $("status").textContent = "Session started. Auto prediction will begin from next period.";
+                            }, 500);
+                        }
+                    } else if (data && data.status === 'rejected') {
+                        utrRef.off('value', state.utrListener);
+                        state.utrListener = null;
+                        $("utr-status").textContent = "Payment Rejected. Please contact support.";
+                        $("utr-status").style.color = "var(--clear-bad)";
+                        $("utr").disabled = false;
+                        document.querySelector("#view-payment .btn:not(.muted)").disabled = false;
+                    }
+                });
+            }).catch(error => {
+                console.error("Firebase submission error:", error);
+                alert("Error submitting UTR: " + error.message);
+                $("utr-status").textContent = "Error submitting UTR. Please contact support.";
+                $("utr-status").style.color = "var(--clear-bad)";
+                $("utr").disabled = false;
+                document.querySelector("#view-payment .btn:not(.muted)").disabled = false;
+            });
+        }
+
+        function handleGateAction(yes) {
+            $("payment-gate-overlay").classList.add("hidden");
+
+            if (yes) {
+                show('view-payment');
+                
+                $("utr-status").textContent = `Pay ₹${state.currentGatePayment} to unlock next prediction level (${state.currentGateLabel}).`;
+                $("utr-status").style.color = "var(--pred-accent)";
+                
+                state.plan = "FREE PLAN (" + state.currentGateLabel + ")";
+                state.price = state.currentGatePayment;
+                document.querySelector("#view-payment .row:last-child button").disabled = true;
+
+            } else {
+                alert("Session Ended. You chose not to unlock the next level.");
+                endSession();
+            }
+        }
+        
+        function showPaymentGate(triggerBalance, nextTarget, price, gateLabel) {
+            state.sessionPausedForGate = true;
+            state.sessionActive = false;
+
+            document.querySelectorAll("section").forEach((section) => {
+                section.classList.add("hidden");
+            });
+            
+            $("gate-trigger-balance").textContent = `₹${triggerBalance}`;
+            $("gate-next-target").textContent = nextTarget === 50000 ? `₹${nextTarget} (Final Target)` : `₹${nextTarget} (Next Check)`;
+            $("gate-price-display").textContent = `₹${price}`;
+            
+            state.currentGatePayment = price;
+            state.currentGateLabel = gateLabel;
+            
+            $("payment-gate-overlay").classList.remove("hidden");
+        }
+        
+        // ADMIN FUNCTIONS (UNCHANGED)
+        function openAdminPanel() {
+            const password = prompt("Enter Admin Password:");
+            if (password === ADMIN_PASSWORD) {
+                show('view-admin');
+                startAdminListener();
+            } else if (password !== null) {
+                alert("Incorrect password!");
+            }
+        }
+        
+        function startAdminListener() {
+            if (state.adminListener) {
+                database.ref('payments').off('value', state.adminListener);
+            }
+            
+            state.adminListener = database.ref('payments').on('value', (snapshot) => {
+                const data = snapshot.val();
+                const utrs = [];
+                
+                if (data) {
+                    Object.entries(data).forEach(([key, value]) => {
+                        if (value.status === 'pending') {
+                            utrs.push({ id: key, ...value });
+                        }
+                    });
+                }
+                
+                renderAdminPanel(utrs);
+            });
+        }
+        
+        function renderAdminPanel(utrs) {
+            const container = $("pending-utrs");
+            
+            if (utrs.length === 0) {
+                container.innerHTML = `
+                    <div class="center" style="padding: 40px;">
+                        <div style="font-size: 1.2rem; color: var(--muted);">No pending UTR approvals</div>
+                        <div class="tiny" style="margin-top: 10px;">All payments have been processed</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            utrs.forEach(utr => {
+                const el = document.createElement("div");
+                el.className = "card";
+                el.style.marginBottom = "15px";
+                el.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                        <div>
+                            <h3 style="margin-bottom: 5px;">${utr.plan}</h3>
+                            <div class="tiny">UTR: ${utr.utr}</div>
+                            <div class="tiny">Platform: ${utr.platform}</div>
+                            <div class="tiny">Submitted: ${new Date(utr.submittedAt).toLocaleString()}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="price" style="margin: 0 0 10px 0; font-size: 1.3rem;">₹${utr.amount}</div>
+                            ${utr.discount > 0 ? `<div class="tiny" style="color: var(--action-button);">${utr.discount}% discount applied</div>` : ''}
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn good" onclick="adminAction('${utr.id}', 'approved')" style="flex: 1; padding: 12px;">
+                            ✅ Approve
+                        </button>
+                        <button class="btn bad" onclick="adminAction('${utr.id}', 'rejected')" style="flex: 1; padding: 12px;">
+                            ❌ Reject
+                        </button>
+                    </div>
+                `;
+                container.appendChild(el);
+            });
+        }
+        
+        function clearAllPayments() {
+            if (confirm("⚠️ DANGER: This will delete ALL payment records permanently. Continue?")) {
+                database.ref('payments').remove()
+                    .then(() => {
+                        alert("All payment records cleared.");
+                        renderAdminPanel([]);
+                    })
+                    .catch(error => {
+                        alert("Error clearing data: " + error.message);
+                    });
+            }
+        }
+        
+        function adminAction(utrId, status) {
+            database.ref('payments/' + utrId + '/status').set(status)
+                .then(() => {
+                    alert(`UTR ${status === 'approved' ? 'approved' : 'rejected'} successfully.`);
+                })
+                .catch(error => {
+                    alert("Error updating status: " + error.message);
+                });
+        }
+
+        // Initialize App
+        const grid = $("platforms-grid");
+        PLATFORMS.forEach(name => {
+            const el = document.createElement("div");
+            el.className = "card";
+            el.innerHTML = `
+                <h3>${name}</h3>
+                <div class="tiny">Premium predictions with high accuracy</div>
+                <button class="btn full" style="margin-top:15px">Select Platform</button>
+            `;
+            el.querySelector("button").onclick = () => {
+                state.platform = name;
+                
+                if (!state.hasSpunWheel) {
+                    show("view-wheel");
+                } else {
+                    show("view-plans");
+                    renderPlansWithDiscount();
+                }
+            };
+            grid.appendChild(el);
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadHistory();
+            initializeWheel();
+            renderOriginalPlans();
+            startLiveEngine();
+        });
+    </script>
+</body>
+</html>
