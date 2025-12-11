@@ -543,6 +543,8 @@
         .log .item .pred-color-G { color: var(--color-green); font-weight: 700; }
         .log .item .pred-bs-B { color: var(--color-big); font-weight: 700; }
         .log .item .pred-bs-S { color: var(--color-small); font-weight: 700; }
+        .log .item .pred-half-win { color: var(--warning); font-weight: 700; }
+
 
         .good {
             color: var(--clear-good);
@@ -559,6 +561,15 @@
             padding: 4px 12px;
             border-radius: 20px;
         }
+        
+        .half-win {
+            color: var(--warning);
+            font-weight: 700;
+            background: rgba(245, 158, 11, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
 
         .pill {
             padding: 8px 16px;
@@ -603,19 +614,21 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            z-index: 1000;
+            z-index: -1; /* INVISIBLE: SEND TO BACK */
             color: #000;
             font-weight: 900;
             font-size: 0.8rem;
             box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
             transition: all 0.3s ease;
-            opacity: 0.9;
+            opacity: 0; /* INVISIBLE: FULLY TRANSPARENT */
+            pointer-events: none; /* INVISIBLE: CANNOT BE CLICKED */
         }
 
         #admin-button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.6);
-            opacity: 1;
+            transform: scale(1);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+            opacity: 0;
+            cursor: default;
         }
 
         /* ==================================== */
@@ -907,8 +920,7 @@
                 <span class="tag">Step 1 of 3</span>
             </div>
             <div class="grid" id="platforms-grid">
-                <!-- Platforms will be populated by JavaScript -->
-            </div>
+                </div>
         </section>
 
         <section id="view-wheel" class="hidden">
@@ -920,8 +932,7 @@
                 <div class="wheel-container">
                     <div class="wheel-pointer"></div>
                     <div class="wheel" id="wheel">
-                        <!-- Wheel segments will be populated by JavaScript -->
-                    </div>
+                        </div>
                     <div class="wheel-center">SPIN</div>
                 </div>
                 <div class="center">
@@ -1076,8 +1087,7 @@
                         📊 Staking Plan (Current Balance Risk Management)
                     </div>
                     <div id="staking-levels">
-                        <!-- Staking levels will be populated by JavaScript -->
-                    </div>
+                        </div>
                 </div>
             </div>
             
@@ -1095,8 +1105,7 @@
             
             <div class="section-title" style="margin-top: 30px;">📋 Session History</div>
             <div class="log" id="history">
-                <!-- History will be populated by JavaScript -->
-            </div>
+                </div>
             
             <div class="row" style="margin-top: 24px;">
                 <button class="btn muted" onclick="endSession()">
@@ -1330,9 +1339,24 @@
             const resultText = item.actualNumber !== undefined ? ` • Result ${item.actualNumber}` : '';
             
             const predHtml = formatPrediction(item.pred);
+            
+            let winStatusClass;
+            let winStatusText;
+            
+            if (item.win === true) {
+                winStatusClass = 'good';
+                winStatusText = 'WIN';
+            } else if (item.win === 'half') {
+                winStatusClass = 'half-win';
+                winStatusText = 'HALF WIN';
+            } else {
+                winStatusClass = 'bad';
+                winStatusText = 'LOSS';
+            }
+
 
             row.innerHTML = `<span>${item.time} • Period ${item.period} • Bet ₹${item.bet} • ${predHtml}${resultText}</span>
-                             <span class="${item.win ? 'good' : 'bad'}">${item.win ? 'WIN' : 'LOSS'}</span>`;
+                             <span class="${winStatusClass}">${winStatusText}</span>`;
             log.prepend(row);
             
             const currentHistory = JSON.parse(sessionStorage.getItem('history') || '[]');
@@ -1349,9 +1373,23 @@
                 row.className = "item";
                 const resultText = item.actualNumber !== undefined ? ` • Result ${item.actualNumber}` : '';
                 const predHtml = formatPrediction(item.pred);
+                
+                let winStatusClass;
+                let winStatusText;
+                
+                if (item.win === true) {
+                    winStatusClass = 'good';
+                    winStatusText = 'WIN';
+                } else if (item.win === 'half') {
+                    winStatusClass = 'half-win';
+                    winStatusText = 'HALF WIN';
+                } else {
+                    winStatusClass = 'bad';
+                    winStatusText = 'LOSS';
+                }
 
                 row.innerHTML = `<span>${item.time} • Period ${item.period} • Bet ₹${item.bet} • ${predHtml}${resultText}</span>
-                                 <span class="${item.win ? 'good' : 'bad'}">${item.win ? 'WIN' : 'LOSS'}</span>`;
+                                 <span class="${winStatusClass}">${winStatusText}</span>`;
                 log.appendChild(row);
             });
             while (log.firstChild) {
@@ -1417,24 +1455,39 @@
             };
         }
 
-        function recordResult(win, actualNumber) {
+        function recordResult(winType, actualNumber) {
             if (!state.pending || !state.sessionActive) return;
 
             const r = state.pending;
             state.pending = null; 
+            
+            let winAmount = 0;
+            let isWin = false;
 
-            if (win) {
-                state.balance += r.bet;
+            if (winType === true) {
+                // Full Win (100 -> 200)
+                winAmount = r.bet;
+                isWin = true;
+            } else if (winType === 'half') {
+                // Half Win (100 -> 150)
+                winAmount = Math.round(r.bet / 2);
+                isWin = true;
+            } 
+            // If winType is false, winAmount is 0 (Full Loss)
+
+            if (isWin) {
+                state.balance += winAmount;
                 state.level = 1;
                 state.initialCycleBalance = state.balance;
 
-                $("status").textContent = `✅ WIN! Period #${r.period}. Level reset to 1.`;
+                $("status").textContent = `${winType === 'half' ? '🟡 HALF WIN' : '✅ WIN'}! Period #${r.period}. Level reset to 1. Balance gained: ₹${winAmount}`;
+                
                 appendHistory({
                     time: new Date().toLocaleTimeString(),
                     period: r.period,
                     bet: r.bet,
                     pred: r.pred,
-                    win: true,
+                    win: winType,
                     actualNumber: actualNumber
                 });
 
@@ -1449,10 +1502,11 @@
                 }
 
             } else {
+                // Full Loss
                 state.balance -= r.bet;
                 state.level += 1;
 
-                $("status").textContent = `❌ LOSS! Period #${r.period}. Level increased to ${state.level}.`;
+                $("status").textContent = `❌ LOSS! Period #${r.period}. Level increased to ${state.level}. Lost: ₹${r.bet}`;
                 appendHistory({
                     time: new Date().toLocaleTimeString(),
                     period: r.period,
@@ -1467,7 +1521,7 @@
                     $("status").textContent = "🔴 Max Loss Reached / Balance Zero. Session Over.";
                     updateStats();
                     setTimeout(() => {
-                        alert("Session over: Max Loss Reached (3 consecutive losses).");
+                        alert("Session over: Max Loss Reached (3 consecutive losses) or Balance Zero.");
                         endSession(); 
                     }, 800);
                     return;
@@ -1523,20 +1577,29 @@
                 
                 if (match) {
                     const num = parseInt(match.number, 10);
-                    let win = false;
+                    let winType = false; // Default to Loss
                     
                     if (state.pending.mode === 'BS') {
                         const actualBS = num >= 5 ? 'Big' : 'Small';
-                        win = (actualBS.toLowerCase() === state.pending.pred.toLowerCase());
+                        winType = (actualBS.toLowerCase() === state.pending.pred.toLowerCase());
                     } else if (state.pending.mode === 'COLOR') {
                         const actualColor = getColorFromNumber(num);
+                        const predictedColor = state.pending.pred;
+                        
                         if (actualColor) {
-                            win = (actualColor.toLowerCase() === state.pending.pred.toLowerCase());
+                            if (actualColor.toLowerCase() === predictedColor.toLowerCase()) {
+                                // Full Win check, unless result is 0 or 5
+                                if ((predictedColor === 'Red' && num === 0) || (predictedColor === 'Green' && num === 5)) {
+                                    winType = 'half'; // Half Win
+                                } else {
+                                    winType = true; // Full Win
+                                }
+                            }
                         }
                     }
                     
                     if (!state.sessionPausedForGate) {
-                         recordResult(win, num);
+                         recordResult(winType, num);
                     } else {
                         state.pending = null; 
                         $("live-status").textContent = `Result #${match.issueNumber.slice(-3)} received. Waiting for Gate payment.`;
