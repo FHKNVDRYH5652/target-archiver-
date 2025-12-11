@@ -545,7 +545,6 @@
         .log .item .pred-bs-S { color: var(--color-small); font-weight: 700; }
         .log .item .pred-half-win { color: var(--warning); font-weight: 700; }
 
-
         .good {
             color: var(--clear-good);
             font-weight: 700;
@@ -569,7 +568,6 @@
             padding: 4px 12px;
             border-radius: 20px;
         }
-
 
         .pill {
             padding: 8px 16px;
@@ -614,21 +612,20 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            z-index: -1; /* INVISIBLE: SEND TO BACK */
+            z-index: 1000; /* Visible and on top */
             color: #000;
             font-weight: 900;
             font-size: 0.8rem;
             box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
             transition: all 0.3s ease;
-            opacity: 0; /* INVISIBLE: FULLY TRANSPARENT */
-            pointer-events: none; /* INVISIBLE: CANNOT BE CLICKED */
+            opacity: 1; /* Fully visible */
+            pointer-events: auto; /* Clickable */
         }
 
         #admin-button:hover {
-            transform: scale(1);
-            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
-            opacity: 0;
-            cursor: default;
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.6);
+            opacity: 1;
         }
 
         /* ==================================== */
@@ -1007,7 +1004,7 @@
             </div>
             
             <div class="row" style="margin-top: 20px;">
-                <a class="btn full muted" href="t.me/Predict456" target="_blank" style="gap: 8px;">
+                <a class="btn full muted" href="https://t.me/Predict456" target="_blank" style="gap: 8px;">
                     <span>🆘 Payment Issues? Contact Support</span>
                 </a>
             </div>
@@ -1185,6 +1182,7 @@
         ];
         const API_URL = 'https://harshpredictor.site/api/api.php';
         const API_POLL_INTERVAL = 1500;
+        const MAX_CONSECUTIVE_PREDICTIONS = 5; // Maximum limit set to 5
 
         const WHEEL_SEGMENTS = [
             { discount: 10, text: "10%", color: "var(--wheel-segment-1)" },
@@ -1217,7 +1215,11 @@
             currentGatePayment: 0,
             currentGateLabel: null, 
             sessionActive: false,
-            sessionPausedForGate: false
+            sessionPausedForGate: false,
+            
+            // NEW STATE FOR RANDOM/CONSECUTIVE PREDICTION LOGIC
+            lastMode: null, // 'COLOR' or 'BS'
+            consecutiveCount: 0 // How many times the lastMode has been repeated
         };
 
         let lastProcessedIssue = null; 
@@ -1246,7 +1248,7 @@
             database = app.database();
         }
 
-        // Core Functions (UNCHANGED - only design updated)
+        // Core Functions
         function endSession() {
             sessionStorage.removeItem('history');
             goBackTo('view-platforms');
@@ -1279,6 +1281,8 @@
                 state.pending = null;
                 lastProcessedIssue = null; 
                 sessionStorage.removeItem('history');
+                state.lastMode = null; // Reset random prediction state
+                state.consecutiveCount = 0; // Reset random prediction state
             }
             show(viewId);
         }
@@ -1400,11 +1404,12 @@
         function getColorFromNumber(num) {
             num = parseInt(num, 10);
             if (isNaN(num)) return null;
+            // 0 is Red, 5 is Green (for half-win logic), others depend on parity
             if (num % 2 === 0) return 'Red';
             else return 'Green';
         }
 
-        // AUTO PREDICTION ENGINE (UNCHANGED)
+        // AUTO PREDICTION ENGINE (UPDATED FOR RANDOM/CONSECUTIVE LOGIC)
         function makeAutoPrediction(nextIssueNumber) {
             if(state.pending && state.pending.fullIssueNumber === nextIssueNumber) {
                 return;
@@ -1419,9 +1424,27 @@
                 return;
             }
 
-            let pred;
-            const predictionType = Math.random() < 0.5 ? 'COLOR' : 'BS';
+            // 1. Determine the mode (COLOR or BS) based on random chance, limited by MAX_CONSECUTIVE_PREDICTIONS
+            let predictionType;
+            const newModeIsColor = Math.random() < 0.5;
 
+            if (state.lastMode && state.consecutiveCount >= MAX_CONSECUTIVE_PREDICTIONS) {
+                // Force a switch if max consecutive limit is hit
+                predictionType = (state.lastMode === 'COLOR') ? 'BS' : 'COLOR';
+            } else {
+                predictionType = newModeIsColor ? 'COLOR' : 'BS';
+            }
+
+            // 2. Update consecutive count based on the chosen mode
+            if (predictionType === state.lastMode) {
+                state.consecutiveCount++;
+            } else {
+                state.lastMode = predictionType;
+                state.consecutiveCount = 1;
+            }
+
+            // 3. Choose the specific prediction (Red/Green or Big/Small)
+            let pred;
             if (predictionType === 'COLOR') {
                 const colors = ["Red", "Green"];
                 pred = colors[Math.floor(Math.random() * colors.length)];
@@ -1430,6 +1453,7 @@
                 pred = bs[Math.floor(Math.random() * bs.length)];
             }
 
+            // 4. Random reversal for added unpredictability (35% probability)
             const REVERSAL_PROBABILITY = 0.35;
             if (Math.random() < REVERSAL_PROBABILITY) {
                 if (pred === 'Red') pred = 'Green';
@@ -1442,7 +1466,8 @@
             const predHtml = formatPrediction(pred);
 
             $("prediction-pill").innerHTML = predHtml;
-            $("status").textContent = `Next Period #${periodShort} → Bet ₹${bet} on ${pred}. (Level ${state.level})`;
+            $("status").textContent = `Next Period #${periodShort} → Bet ₹${bet} on ${pred}. (Level ${state.level} | C:${state.consecutiveCount})`;
+
             $("live-status").textContent = `Prediction ready for #${periodShort}`;
 
             state.pending = {
@@ -1465,11 +1490,11 @@
             let isWin = false;
 
             if (winType === true) {
-                // Full Win (100 -> 200)
+                // Full Win (100 -> 200, so win is 100)
                 winAmount = r.bet;
                 isWin = true;
             } else if (winType === 'half') {
-                // Half Win (100 -> 150)
+                // Half Win (100 -> 150, so win is 50)
                 winAmount = Math.round(r.bet / 2);
                 isWin = true;
             } 
@@ -1588,9 +1613,9 @@
                         
                         if (actualColor) {
                             if (actualColor.toLowerCase() === predictedColor.toLowerCase()) {
-                                // Full Win check, unless result is 0 or 5
+                                // Half Win logic: Red predicted + 0 result OR Green predicted + 5 result
                                 if ((predictedColor === 'Red' && num === 0) || (predictedColor === 'Green' && num === 5)) {
-                                    winType = 'half'; // Half Win
+                                    winType = 'half'; 
                                 } else {
                                     winType = true; // Full Win
                                 }
